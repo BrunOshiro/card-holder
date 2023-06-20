@@ -10,7 +10,7 @@ import java.util.UUID;
 public record CardHolderResponseDto(
         UUID cardHolderId,
         CardHolderStatusEnum status,
-        BigDecimal limit,
+        BigDecimal creditLimit,
         LocalDateTime createdAt
 ) {
 }

@@ -167,7 +167,7 @@ paths:
                 $ref: "#/components/schemas/CardResponse"
     patch:
       summary: Update Card Limit
-      description: Updates the limit of a specific card.
+      description: Updates the creditLimit of a specific card.
       tags:
         - cards
       parameters:
@@ -246,7 +246,7 @@ components:
           enum: [ACTIVE, INACTIVE]
         limit:
           type: number
-          description: card holder limit account
+          description: card holder creditLimit account
         createdAt:
           type: string
           format: date-time

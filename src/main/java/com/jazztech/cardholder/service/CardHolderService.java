@@ -1,7 +1,5 @@
 package com.jazztech.cardholder.service;
 
-import static com.jazztech.cardholder.domain.CardHolderDomain.getMostRecentCreditAnalysis;
-
 import com.jazztech.cardholder.domain.CardHolderDomain;
 import com.jazztech.cardholder.infrastructure.creditanalysisapi.CreditAnalysisApi;
 import com.jazztech.cardholder.infrastructure.creditanalysisapi.dto.CreditAnalysisDto;
@@ -32,15 +30,17 @@ public class CardHolderService {
     CardHolderRepository cardHolderRepository;
 
     @Transactional
-    public CardHolderResponseDto createCardHoler(CardHolderRequestDto cardHolderRequestDto) {
-        final CreditAnalysisDto creditAnalysis = getCreditAnalysis(cardHolderRequestDto.clientId());
+    public CardHolderResponseDto createCardHolder(CardHolderRequestDto cardHolderRequestDto) {
+        final CreditAnalysisDto creditAnalysis =
+                getCreditAnalysisFromCreditAnalysisApi(
+                        cardHolderRequestDto.clientId(), cardHolderRequestDto.creditAnalysisId());
         final CardHolderDomain cardHolderDomain = CardHolderDomain.builder()
                 .clientId(cardHolderRequestDto.clientId())
                 .creditAnalysisId(creditAnalysis.id())
                 .status(creditAnalysis.approved()
                         ? CardHolderStatusEnum.ACTIVE
                         : CardHolderStatusEnum.INACTIVE)
-                .limit(creditAnalysis.approvedLimit())
+                .creditLimit(creditAnalysis.approvedLimit())
                 .bankAccount(CardHolderDomain.BankAccountDomain.builder()
                         .account(cardHolderRequestDto.bankAccount().account())
                         .agency(cardHolderRequestDto.bankAccount().agency())
@@ -56,8 +56,8 @@ public class CardHolderService {
         return cardHolderMapper.entityToDto(savedCardHolderEntity);
     }
 
-    private CreditAnalysisDto getCreditAnalysis(UUID clientId) {
+    private CreditAnalysisDto getCreditAnalysisFromCreditAnalysisApi(UUID clientId, UUID creditAnalysisId) {
         final List<CreditAnalysisDto> creditAnalysisByClientId = creditAnalysisApi.getCreditAnalysisByClientId(clientId);
-        return getMostRecentCreditAnalysis(creditAnalysisByClientId);
+        return CardHolderDomain.getCreditAnalysis(creditAnalysisByClientId, creditAnalysisId);
     }
 }

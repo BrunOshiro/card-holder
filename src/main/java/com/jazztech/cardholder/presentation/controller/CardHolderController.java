@@ -26,6 +26,6 @@ public class CardHolderController {
     @ResponseStatus(value = HttpStatus.CREATED)
     public CardHolderResponseDto createCardHolder(CardHolderRequestDto cardHolderRequestDto) {
         LOGGER.info("Card Holder creation request: " + cardHolderRequestDto.toString());
-        return cardHolderService.createCardHoler(cardHolderRequestDto);
+        return cardHolderService.createCardHolder(cardHolderRequestDto);
     }
 }

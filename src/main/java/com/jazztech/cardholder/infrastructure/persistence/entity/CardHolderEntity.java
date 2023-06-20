@@ -29,7 +29,8 @@ public class CardHolderEntity {
     @Column(name = "credit_analysis_id")
     UUID creditAnalysisId;
     CardHolderStatusEnum status;
-    BigDecimal limit;
+    @Column(name = "credit_limit")
+    BigDecimal creditLimit;
     @Column(name = "bank_account")
     String bankAccount;
     @Column(name = "bank_agency")
@@ -46,15 +47,15 @@ public class CardHolderEntity {
             UUID clientId,
             UUID creditAnalysisId,
             CardHolderStatusEnum status,
-            BigDecimal limit,
+            BigDecimal creditLimit,
             String bankAccount,
             String bankAgency,
-            String bankCode,
-            LocalDateTime createdAt) {
+            String bankCode
+    ) {
         this.clientId = clientId;
         this.creditAnalysisId = creditAnalysisId;
         this.status = status;
-        this.limit = limit.setScale(ROUND, RoundingMode.HALF_UP);
+        this.creditLimit = creditLimit.setScale(ROUND, RoundingMode.HALF_UP);
         this.bankAccount = bankAccount;
         this.bankAgency = bankAgency;
         this.bankCode = bankCode;

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Component
 @FeignClient(name = "credit-analysis", url = "http://localhost:8081")
 public interface CreditAnalysisApi {
-    @GetMapping("api/v1/credit/analysis/")
+    @GetMapping("/api/v1/credits/analysis")
     List<CreditAnalysisDto> getCreditAnalysisByClientId(
             @RequestParam(value = "clientId", required = false) UUID clientId
     );
