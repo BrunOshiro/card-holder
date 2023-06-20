@@ -7,9 +7,10 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import lombok.Builder;
 
+@Builder(toBuilder = true)
 public record CardHolderDomain(
-        UUID cardHolderId,
         UUID clientId,
         UUID creditAnalysisId,
         CardHolderStatusEnum status,
@@ -23,6 +24,7 @@ public record CardHolderDomain(
                 .orElse(null);
     }
 
+    @Builder
     public record BankAccountDomain(
             String account,
             String agency,
