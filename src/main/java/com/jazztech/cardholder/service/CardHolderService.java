@@ -11,10 +11,13 @@ import com.jazztech.cardholder.infrastructure.persistence.mapper.CardHolderMappe
 import com.jazztech.cardholder.infrastructure.persistence.repository.CardHolderRepository;
 import com.jazztech.cardholder.presentation.dto.CardHolderRequestDto;
 import com.jazztech.cardholder.presentation.dto.CardHolderResponseDto;
+import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -22,11 +25,13 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @Service
 public class CardHolderService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CardHolderService.class);
+
     CreditAnalysisApi creditAnalysisApi;
     CardHolderMapper cardHolderMapper;
     CardHolderRepository cardHolderRepository;
 
-
+    @Transactional
     public CardHolderResponseDto createCardHoler(CardHolderRequestDto cardHolderRequestDto) {
         final CreditAnalysisDto creditAnalysis = getCreditAnalysis(cardHolderRequestDto.clientId());
         final CardHolderDomain cardHolderDomain = CardHolderDomain.builder()
@@ -46,6 +51,8 @@ public class CardHolderService {
 
         final CardHolderEntity cardHolderEntity = cardHolderMapper.domainToEntity(cardHolderDomain);
         final CardHolderEntity savedCardHolderEntity = cardHolderRepository.save(cardHolderEntity);
+
+        LOGGER.info("CardHolder created: {}", savedCardHolderEntity);
         return cardHolderMapper.entityToDto(savedCardHolderEntity);
     }
 
