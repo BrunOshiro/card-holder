@@ -4,7 +4,6 @@ import com.jazztech.cardholder.infrastructure.creditanalysisapi.dto.CreditAnalys
 import java.util.UUID;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -12,8 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(name = "credit-analysis", url = "http://localhost:8081")
 public interface CreditAnalysisApi {
     @GetMapping("api/v1/credit/analysis/")
-    CreditAnalysisDto getCreditAnalysisByCpfOrClientId(
-            @RequestParam(value = "clientId", required = false) UUID clientId,
-            @RequestParam(value = "cpf") @Validated String cpf
+    CreditAnalysisDto getCreditAnalysisByClientId(
+            @RequestParam(value = "clientId", required = false) UUID clientId
     );
 }
