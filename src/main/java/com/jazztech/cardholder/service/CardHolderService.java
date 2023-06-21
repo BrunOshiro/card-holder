@@ -12,7 +12,6 @@ import com.jazztech.cardholder.presentation.dto.CardHolderResponseDto;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -33,8 +32,7 @@ public class CardHolderService {
     @Transactional
     public CardHolderResponseDto createCardHolder(@Valid CardHolderRequestDto cardHolderRequestDto) {
         final CreditAnalysisDto creditAnalysis =
-                getCreditAnalysisFromCreditAnalysisApi(
-                        cardHolderRequestDto.clientId(), cardHolderRequestDto.creditAnalysisId());
+                getCreditAnalysisFromCreditAnalysisApi(cardHolderRequestDto.creditAnalysisId());
         final CardHolderDomain cardHolderDomain = CardHolderDomain.builder()
                 .clientId(cardHolderRequestDto.clientId())
                 .creditAnalysisId(creditAnalysis.id())
@@ -57,8 +55,7 @@ public class CardHolderService {
         return cardHolderMapper.entityToDto(savedCardHolderEntity);
     }
 
-    private CreditAnalysisDto getCreditAnalysisFromCreditAnalysisApi(UUID clientId, UUID creditAnalysisId) {
-        final List<CreditAnalysisDto> creditAnalysisByClientId = creditAnalysisApi.getCreditAnalysisByClientId(clientId);
-        return CardHolderDomain.getCreditAnalysis(creditAnalysisByClientId, creditAnalysisId);
+    public CreditAnalysisDto getCreditAnalysisFromCreditAnalysisApi(UUID creditAnalysisId) {
+        return creditAnalysisApi.getCreditAnalysisId(creditAnalysisId);
     }
 }

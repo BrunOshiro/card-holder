@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -54,6 +55,7 @@ public class CardHolderEntity {
     public CardHolderEntity() {
     }
 
+    @Builder(toBuilder = true)
     public CardHolderEntity(
             UUID clientId,
             UUID creditAnalysisId,
