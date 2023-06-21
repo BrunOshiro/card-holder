@@ -3,6 +3,7 @@ package com.jazztech.cardholder.service;
 import com.jazztech.cardholder.domain.CardHolderDomain;
 import com.jazztech.cardholder.infrastructure.creditanalysisapi.CreditAnalysisApi;
 import com.jazztech.cardholder.infrastructure.creditanalysisapi.dto.CreditAnalysisDto;
+import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderAlreadyExists;
 import com.jazztech.cardholder.infrastructure.persistence.entity.CardHolderEntity;
 import com.jazztech.cardholder.infrastructure.persistence.enums.CardHolderStatusEnum;
 import com.jazztech.cardholder.infrastructure.persistence.mapper.CardHolderMapper;
@@ -48,14 +49,23 @@ public class CardHolderService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        final CardHolderEntity cardHolderEntity = cardHolderMapper.domainToEntity(cardHolderDomain);
+        final CardHolderEntity cardHolderEntity = saveCardHolder(cardHolderMapper.domainToEntity(cardHolderDomain));
         final CardHolderEntity savedCardHolderEntity = cardHolderRepository.save(cardHolderEntity);
 
         LOGGER.info("CardHolder created: {}", savedCardHolderEntity);
         return cardHolderMapper.entityToDto(savedCardHolderEntity);
     }
 
-    public CreditAnalysisDto getCreditAnalysisFromCreditAnalysisApi(UUID creditAnalysisId) {
+    private CreditAnalysisDto getCreditAnalysisFromCreditAnalysisApi(UUID creditAnalysisId) {
         return creditAnalysisApi.getCreditAnalysisId(creditAnalysisId);
+    }
+
+    private CardHolderEntity saveCardHolder(CardHolderEntity cardHolderEntity) {
+        try {
+            return cardHolderRepository.save(cardHolderEntity);
+        } catch (CardHolderAlreadyExists e) {
+            LOGGER.error("Error saving CardHolder: {}", cardHolderEntity, e);
+            throw new CardHolderAlreadyExists("CardHolder " + cardHolderEntity + " already exists");
+        }
     }
 }

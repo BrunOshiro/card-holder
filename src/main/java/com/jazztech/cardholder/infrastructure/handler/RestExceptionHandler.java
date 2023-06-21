@@ -1,5 +1,6 @@
 package com.jazztech.cardholder.infrastructure.handler;
 
+import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderAlreadyExists;
 import com.jazztech.cardholder.infrastructure.handler.exception.CreditAnalysisNotFound;
 import java.net.URI;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,16 @@ public class RestExceptionHandler {
     public ResponseEntity<ProblemDetail> creditAnalysisNotFoundHandler(CreditAnalysisNotFound e) {
         final ProblemDetail problemDetail = problemDetailBuilder(
                 HttpStatus.NOT_FOUND, e.getClass().getSimpleName(),
+                e.getMessage(), e);
+        return ResponseEntity.status(problemDetail.getStatus())
+                .body(problemDetail
+                );
+    }
+
+    @ExceptionHandler(CardHolderAlreadyExists.class)
+    public ResponseEntity<ProblemDetail> cardHolderAlreadyExistsHandler(CardHolderAlreadyExists e) {
+        final ProblemDetail problemDetail = problemDetailBuilder(
+                HttpStatus.CONFLICT, e.getClass().getSimpleName(),
                 e.getMessage(), e);
         return ResponseEntity.status(problemDetail.getStatus())
                 .body(problemDetail
