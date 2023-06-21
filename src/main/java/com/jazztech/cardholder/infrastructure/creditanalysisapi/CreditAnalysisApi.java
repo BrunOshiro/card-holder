@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @Component
-@FeignClient(name = "credit-analysis", url = "http://localhost:8081")
+@FeignClient(name = "credit-analysis", url = "http://localhost:8081", configuration = CustomFeignConfiguration.class)
 public interface CreditAnalysisApi {
     @GetMapping("/api/v1/credits/analysis/{id}")
     CreditAnalysisDto getCreditAnalysisId(
