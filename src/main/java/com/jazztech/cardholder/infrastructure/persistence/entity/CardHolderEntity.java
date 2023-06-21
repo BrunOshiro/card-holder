@@ -3,6 +3,8 @@ package com.jazztech.cardholder.infrastructure.persistence.entity;
 import com.jazztech.cardholder.infrastructure.persistence.enums.CardHolderStatusEnum;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -24,19 +26,28 @@ public class CardHolderEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     UUID id;
+
     @Column(name = "client_id")
     UUID clientId;
+
     @Column(name = "credit_analysis_id")
     UUID creditAnalysisId;
+
+    @Enumerated(EnumType.STRING)
     CardHolderStatusEnum status;
+
     @Column(name = "credit_limit")
     BigDecimal creditLimit;
+
     @Column(name = "bank_account")
     String bankAccount;
+
     @Column(name = "bank_agency")
     String bankAgency;
+
     @Column(name = "bank_code")
     String bankCode;
+
     @Column(name = "created_at")
     LocalDateTime createdAt;
 

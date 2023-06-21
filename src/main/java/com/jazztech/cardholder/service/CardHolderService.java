@@ -10,6 +10,7 @@ import com.jazztech.cardholder.infrastructure.persistence.repository.CardHolderR
 import com.jazztech.cardholder.presentation.dto.CardHolderRequestDto;
 import com.jazztech.cardholder.presentation.dto.CardHolderResponseDto;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -30,7 +31,7 @@ public class CardHolderService {
     private final CardHolderRepository cardHolderRepository;
 
     @Transactional
-    public CardHolderResponseDto createCardHolder(CardHolderRequestDto cardHolderRequestDto) {
+    public CardHolderResponseDto createCardHolder(@Valid CardHolderRequestDto cardHolderRequestDto) {
         final CreditAnalysisDto creditAnalysis =
                 getCreditAnalysisFromCreditAnalysisApi(
                         cardHolderRequestDto.clientId(), cardHolderRequestDto.creditAnalysisId());
