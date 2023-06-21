@@ -25,9 +25,9 @@ import org.springframework.validation.annotation.Validated;
 public class CardHolderService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CardHolderService.class);
 
-    CreditAnalysisApi creditAnalysisApi;
-    CardHolderMapper cardHolderMapper;
-    CardHolderRepository cardHolderRepository;
+    private final CreditAnalysisApi creditAnalysisApi;
+    private final CardHolderMapper cardHolderMapper;
+    private final CardHolderRepository cardHolderRepository;
 
     @Transactional
     public CardHolderResponseDto createCardHolder(CardHolderRequestDto cardHolderRequestDto) {

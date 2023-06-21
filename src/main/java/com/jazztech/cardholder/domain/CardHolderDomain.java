@@ -22,7 +22,7 @@ public record CardHolderDomain(
         return creditAnalysisList.stream()
                 .filter(creditAnalysis -> creditAnalysis.id().equals(creditAnalysisId))
                 .findFirst()
-                .orElseThrow(() -> new CreditAnalysisNotFound("Credit Analysis " + creditAnalysisId + "not found"));
+                .orElseThrow(() -> new CreditAnalysisNotFound("Credit Analysis " + creditAnalysisId + " not found"));
     }
 
     @Builder

@@ -25,7 +25,7 @@ public class CardHolderController {
     @PostMapping
     @ResponseStatus(value = HttpStatus.CREATED)
     public CardHolderResponseDto createCardHolder(CardHolderRequestDto cardHolderRequestDto) {
-        LOGGER.info("Card Holder creation request: " + cardHolderRequestDto.toString());
+        LOGGER.info("Card Holder creation requested: " + cardHolderRequestDto.toString());
         return cardHolderService.createCardHolder(cardHolderRequestDto);
     }
 }
