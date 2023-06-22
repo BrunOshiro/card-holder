@@ -13,6 +13,7 @@ import com.jazztech.cardholder.presentation.dto.CardHolderRequestDto;
 import com.jazztech.cardholder.presentation.dto.CardHolderResponseDto;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import org.springframework.validation.annotation.Validated;
 @Service
 public class CardHolderService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CardHolderService.class);
+    private static final Integer ROUND = 2;
 
     private final CreditAnalysisApi creditAnalysisApi;
     private final CardHolderMapper cardHolderMapper;
@@ -34,28 +36,16 @@ public class CardHolderService {
     @Transactional
     public CardHolderResponseDto createCardHolder(@Valid CardHolderRequestDto cardHolderRequestDto) {
         final CreditAnalysisDto creditAnalysis =
-                getCreditAnalysisFromCreditAnalysisApi(cardHolderRequestDto.creditAnalysisId());
-        final CardHolderDomain cardHolderDomain = CardHolderDomain.builder()
-                .clientId(cardHolderRequestDto.clientId())
-                .creditAnalysisId(creditAnalysis.id())
-                .status(CardHolderStatusEnum.ACTIVE)
-                .creditLimit(creditAnalysis.approvedLimit())
-                .bankAccount(CardHolderDomain.BankAccountDomain.builder()
-                        .account(cardHolderRequestDto.bankAccount().account())
-                        .agency(cardHolderRequestDto.bankAccount().agency())
-                        .bankCode(cardHolderRequestDto.bankAccount().bankCode())
-                        .build())
-                .createdAt(LocalDateTime.now())
-                .build();
+                getCreditAnalysisFromApiAndValidate(cardHolderRequestDto.creditAnalysisId());
 
-        final CardHolderEntity cardHolderEntity = saveCardHolder(cardHolderMapper.domainToEntity(cardHolderDomain));
-        final CardHolderEntity savedCardHolderEntity = cardHolderRepository.save(cardHolderEntity);
+        final CardHolderDomain cardHolderDomain = createCardHolderDomain(cardHolderRequestDto, creditAnalysis);
+        final CardHolderEntity savedCardHolderEntity = saveCardHolder(cardHolderMapper.domainToEntity(cardHolderDomain));
 
         LOGGER.info("CardHolder created: {}", savedCardHolderEntity);
         return cardHolderMapper.entityToDto(savedCardHolderEntity);
     }
 
-    private CreditAnalysisDto getCreditAnalysisFromCreditAnalysisApi(UUID creditAnalysisId) {
+    private CreditAnalysisDto getCreditAnalysisFromApiAndValidate(UUID creditAnalysisId) {
         final CreditAnalysisDto creditAnalysisDto = creditAnalysisApi.getCreditAnalysisId(creditAnalysisId);
 
         if (creditAnalysisDto.approved()) {
@@ -65,12 +55,42 @@ public class CardHolderService {
         }
     }
 
+    private CardHolderDomain createCardHolderDomain(CardHolderRequestDto cardHolderRequestDto, CreditAnalysisDto creditAnalysisDto) {
+        return CardHolderDomain.builder()
+                .clientId(cardHolderRequestDto.clientId())
+                .creditAnalysisId(creditAnalysisDto.id())
+                .status(CardHolderStatusEnum.ACTIVE)
+                .creditLimit(creditAnalysisDto.approvedLimit().setScale(ROUND, RoundingMode.HALF_UP))
+                .bankAccount(createBankAccountDomain(cardHolderRequestDto))
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    private CardHolderDomain.BankAccountDomain createBankAccountDomain(CardHolderRequestDto cardHolderRequestDto) {
+        if (!cardHolderRequestDto.isBankAccountValid()) {
+            throw new IllegalArgumentException("Invalid bank account details");
+        }
+        assert cardHolderRequestDto.bankAccount() != null;
+
+        return CardHolderDomain.BankAccountDomain.builder()
+                .account(cardHolderRequestDto.bankAccount().account())
+                .agency(cardHolderRequestDto.bankAccount().agency())
+                .bankCode(cardHolderRequestDto.bankAccount().bankCode())
+                .build();
+    }
+
     private CardHolderEntity saveCardHolder(CardHolderEntity cardHolderEntity) {
+        final UUID clientId = cardHolderEntity.getClientId();
+
+        if (cardHolderRepository.findByClientId(clientId) != null) {
+            throw new CardHolderAlreadyExists("Client " + clientId + " is already a CardHolder");
+        }
+
         try {
             return cardHolderRepository.save(cardHolderEntity);
         } catch (CardHolderAlreadyExists e) {
             LOGGER.error("Error saving CardHolder: {}", cardHolderEntity, e);
-            throw new CardHolderAlreadyExists("CardHolder " + cardHolderEntity + " already exists");
+            throw new RuntimeException("Failed to save the Card Holder " + cardHolderEntity);
         }
     }
 }
