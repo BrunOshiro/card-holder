@@ -2,10 +2,14 @@ package com.jazztech.cardholder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import com.jazztech.cardholder.infrastructure.creditanalysisapi.CreditAnalysisApi;
 import com.jazztech.cardholder.infrastructure.creditanalysisapi.dto.CreditAnalysisDto;
+import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderAlreadyExists;
+import com.jazztech.cardholder.infrastructure.handler.exception.CreditAnalysisNotApproved;
+import com.jazztech.cardholder.infrastructure.handler.exception.CreditAnalysisNotFound;
 import com.jazztech.cardholder.infrastructure.persistence.entity.CardHolderEntity;
 import com.jazztech.cardholder.infrastructure.persistence.enums.CardHolderStatusEnum;
 import com.jazztech.cardholder.infrastructure.persistence.mapper.CardHolderMapperImpl;
@@ -67,7 +71,7 @@ public class CardHolderServiceTest {
     }
 
     @Test
-    public void should_create_card_holder_inactive() {
+    public void should_throws_credit_analysis_not_approved() {
         CreditAnalysisDto creditAnalysisDto = Factory.creditAnalysisDtoFactory().toBuilder()
                 .id(UUID.fromString("c85bc938-ecb2-4e33-a442-43fff8bfe9ff"))
                 .approved(false)
@@ -76,25 +80,40 @@ public class CardHolderServiceTest {
                 .annualInterest(BigDecimal.valueOf(0.00))
                 .date(LocalDateTime.parse("2023-05-30T14:27:00.408202"))
                 .build();
-        CardHolderEntity cardHolderEntity = Factory.cardHolderEntityFactory().toBuilder()
-                .creditAnalysisId(UUID.fromString("c85bc938-ecb2-4e33-a442-43fff8bfe9ff"))
-                .status(CardHolderStatusEnum.INACTIVE)
-                .creditLimit(BigDecimal.valueOf(0.00))
-                .build();
 
         when(creditAnalysisApi.getCreditAnalysisId(clientIdCaptor.capture()))
                 .thenReturn(creditAnalysisDto);
-        when(cardHolderRepository.save(cardHolderEntityCaptor.capture()))
-                .thenReturn(cardHolderEntity);
 
         CardHolderRequestDto cardHolderRequestDto = Factory.cardHolderRequestDtoFactory().toBuilder()
                 .creditAnalysisId(UUID.fromString("c85bc938-ecb2-4e33-a442-43fff8bfe9ff"))
                 .build();
 
-        CardHolderResponseDto cardHolderResponseDto = cardHolderService.createCardHolder(cardHolderRequestDto);
+        CreditAnalysisNotApproved exception = assertThrows(CreditAnalysisNotApproved.class, () -> cardHolderService.createCardHolder(cardHolderRequestDto));
 
-        assertNotNull(cardHolderResponseDto);
-        assertEquals(CardHolderStatusEnum.INACTIVE, cardHolderResponseDto.status());
-        assertEquals(cardHolderEntityCaptor.getValue().getCreditLimit().setScale(ROUND, RoundingMode.HALF_UP), cardHolderResponseDto.creditLimit());
+        assertEquals("Credit Analysis %s not approved".formatted(cardHolderRequestDto.creditAnalysisId()), exception.getMessage());
+    }
+
+    @Test
+    public void should_throws_credit_analysis_not_found() {
+        CardHolderRequestDto cardHolderRequestDto = Factory.cardHolderRequestDtoFactory().toBuilder()
+                .creditAnalysisId(UUID.fromString("c99bc938-ecb2-4e33-a442-43fff8bfe9ff"))
+                .build();
+
+        when(creditAnalysisApi.getCreditAnalysisId(clientIdCaptor.capture()))
+                .thenThrow(new CreditAnalysisNotFound("Credit Analysis %s not found".formatted(cardHolderRequestDto.creditAnalysisId())));
+
+        assertThrows(CreditAnalysisNotFound.class, () -> cardHolderService.createCardHolder(cardHolderRequestDto));
+    }
+
+    @Test
+    public void should_throws_card_holder_already_exists() {
+        when(creditAnalysisApi.getCreditAnalysisId(clientIdCaptor.capture()))
+                .thenReturn(Factory.creditAnalysisDtoFactory());
+        when(cardHolderRepository.findByClientId(clientIdCaptor.capture()))
+                .thenReturn(Factory.cardHolderEntityFactory());
+
+        CardHolderRequestDto cardHolderRequestDto = Factory.cardHolderRequestDtoFactory();
+
+        assertThrows(CardHolderAlreadyExists.class, () -> cardHolderService.createCardHolder(cardHolderRequestDto));
     }
 }
