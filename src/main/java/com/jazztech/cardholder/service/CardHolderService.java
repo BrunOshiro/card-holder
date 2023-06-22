@@ -4,6 +4,7 @@ import com.jazztech.cardholder.domain.CardHolderDomain;
 import com.jazztech.cardholder.infrastructure.creditanalysisapi.CreditAnalysisApi;
 import com.jazztech.cardholder.infrastructure.creditanalysisapi.dto.CreditAnalysisDto;
 import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderAlreadyExists;
+import com.jazztech.cardholder.infrastructure.handler.exception.CreditAnalysisNotApproved;
 import com.jazztech.cardholder.infrastructure.persistence.entity.CardHolderEntity;
 import com.jazztech.cardholder.infrastructure.persistence.enums.CardHolderStatusEnum;
 import com.jazztech.cardholder.infrastructure.persistence.mapper.CardHolderMapper;
@@ -37,9 +38,7 @@ public class CardHolderService {
         final CardHolderDomain cardHolderDomain = CardHolderDomain.builder()
                 .clientId(cardHolderRequestDto.clientId())
                 .creditAnalysisId(creditAnalysis.id())
-                .status(creditAnalysis.approved()
-                        ? CardHolderStatusEnum.ACTIVE
-                        : CardHolderStatusEnum.INACTIVE)
+                .status(CardHolderStatusEnum.ACTIVE)
                 .creditLimit(creditAnalysis.approvedLimit())
                 .bankAccount(CardHolderDomain.BankAccountDomain.builder()
                         .account(cardHolderRequestDto.bankAccount().account())
@@ -57,7 +56,13 @@ public class CardHolderService {
     }
 
     private CreditAnalysisDto getCreditAnalysisFromCreditAnalysisApi(UUID creditAnalysisId) {
-        return creditAnalysisApi.getCreditAnalysisId(creditAnalysisId);
+        final CreditAnalysisDto creditAnalysisDto = creditAnalysisApi.getCreditAnalysisId(creditAnalysisId);
+
+        if (creditAnalysisDto.approved()) {
+            return creditAnalysisDto;
+        } else {
+            throw new CreditAnalysisNotApproved("Credit Analysis " + creditAnalysisId + " not approved");
+        }
     }
 
     private CardHolderEntity saveCardHolder(CardHolderEntity cardHolderEntity) {
