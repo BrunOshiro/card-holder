@@ -8,9 +8,6 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface CardHolderMapper {
-    @Mapping(source = "bankAccount.account", target = "bankAccount")
-    @Mapping(source = "bankAccount.agency", target = "bankAgency")
-    @Mapping(source = "bankAccount.bankCode", target = "bankCode")
     CardHolderEntity domainToEntity(CardHolderDomain cardHolderDomain);
 
     @Mapping(source = "id", target = "cardHolderId")
