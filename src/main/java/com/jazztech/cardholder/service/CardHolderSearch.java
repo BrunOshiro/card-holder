@@ -26,10 +26,9 @@ public class CardHolderSearch {
     }
 
     public List<CardHolderResponseDto> getAll() {
-        try {
-            return cardHolderMapper.entityListToDtoList(cardHolderRepository.findAll());
-        } catch (CardHolderNotFound e) {
+        if (cardHolderRepository.findAll().isEmpty()) {
             throw new CardHolderNotFound("There is no Card Holder registered yet");
         }
+        return cardHolderMapper.entityListToDtoList(cardHolderRepository.findAll());
     }
 }
