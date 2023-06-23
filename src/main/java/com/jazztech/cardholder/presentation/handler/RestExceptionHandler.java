@@ -1,4 +1,4 @@
-package com.jazztech.cardholder.infrastructure.handler;
+package com.jazztech.cardholder.presentation.handler;
 
 import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderAlreadyExists;
 import com.jazztech.cardholder.infrastructure.handler.exception.CreditAnalysisNotApproved;
@@ -33,7 +33,7 @@ public class RestExceptionHandler {
     @ExceptionHandler(CardHolderAlreadyExists.class)
     public ResponseEntity<ProblemDetail> cardHolderAlreadyExistsHandler(CardHolderAlreadyExists e) {
         final ProblemDetail problemDetail = problemDetailBuilder(
-                HttpStatus.CONFLICT, e.getClass().getSimpleName(),
+                HttpStatus.UNPROCESSABLE_ENTITY, e.getClass().getSimpleName(),
                 e.getMessage(), e);
         return ResponseEntity.status(problemDetail.getStatus())
                 .body(problemDetail
