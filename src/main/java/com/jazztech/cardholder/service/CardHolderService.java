@@ -68,7 +68,7 @@ public class CardHolderService {
 
     private CardHolderDomain.BankAccountDomain createBankAccountDomain(CardHolderRequestDto cardHolderRequestDto) {
         if (!cardHolderRequestDto.isBankAccountValid()) {
-            throw new IllegalArgumentException("Invalid bank account details");
+            throw new IllegalArgumentException("Invalid bank account details. All fields are required or none.");
         }
 
         if (cardHolderRequestDto.bankAccount() != null) {
