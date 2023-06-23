@@ -1,6 +1,7 @@
 package com.jazztech.cardholder.infrastructure.persistence.entity;
 
 import com.jazztech.cardholder.infrastructure.persistence.enums.CardHolderStatusEnum;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -31,9 +33,11 @@ public class CardHolderEntity {
     @GeneratedValue(generator = "uuid2")
     UUID id;
 
+    @NotNull
     @Column(name = "client_id")
     UUID clientId;
 
+    @NotNull
     @Column(name = "credit_analysis_id")
     UUID creditAnalysisId;
 
@@ -43,6 +47,7 @@ public class CardHolderEntity {
     @Column(name = "credit_limit")
     BigDecimal creditLimit;
 
+    @Nullable
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "bank_account_id", referencedColumnName = "id")
     BankAccountEntity bankAccount;
@@ -56,11 +61,11 @@ public class CardHolderEntity {
 
     @Builder(toBuilder = true)
     public CardHolderEntity(
-            UUID clientId,
-            UUID creditAnalysisId,
+            @NotNull UUID clientId,
+            @NotNull UUID creditAnalysisId,
             CardHolderStatusEnum status,
             BigDecimal creditLimit,
-            BankAccountEntity bankAccount
+            @Nullable BankAccountEntity bankAccount
     ) {
         this.clientId = clientId;
         this.creditAnalysisId = creditAnalysisId;

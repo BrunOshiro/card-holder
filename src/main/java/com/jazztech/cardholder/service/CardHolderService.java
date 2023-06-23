@@ -70,13 +70,16 @@ public class CardHolderService {
         if (!cardHolderRequestDto.isBankAccountValid()) {
             throw new IllegalArgumentException("Invalid bank account details");
         }
-        assert cardHolderRequestDto.bankAccount() != null;
 
-        return CardHolderDomain.BankAccountDomain.builder()
-                .account(cardHolderRequestDto.bankAccount().account())
-                .agency(cardHolderRequestDto.bankAccount().agency())
-                .bankCode(cardHolderRequestDto.bankAccount().bankCode())
-                .build();
+        if (cardHolderRequestDto.bankAccount() != null) {
+            return CardHolderDomain.BankAccountDomain.builder()
+                    .account(cardHolderRequestDto.bankAccount().account())
+                    .agency(cardHolderRequestDto.bankAccount().agency())
+                    .bankCode(cardHolderRequestDto.bankAccount().bankCode())
+                    .build();
+        } else {
+            return null;
+        }
     }
 
     private CardHolderEntity saveCardHolder(CardHolderEntity cardHolderEntity) {
@@ -86,11 +89,7 @@ public class CardHolderService {
             throw new CardHolderAlreadyExists("Client " + clientId + " is already a CardHolder");
         }
 
-        try {
-            return cardHolderRepository.save(cardHolderEntity);
-        } catch (CardHolderAlreadyExists e) {
-            LOGGER.error("Error saving CardHolder: {}", cardHolderEntity, e);
-            throw new RuntimeException("Failed to save the Card Holder " + cardHolderEntity);
-        }
+        LOGGER.info("Saving CardHolder: {}", cardHolderEntity);
+        return cardHolderRepository.save(cardHolderEntity);
     }
 }

@@ -29,7 +29,6 @@ public record CardHolderRequestDto(
 
             @Size(min = 6, max = 10, message = "Account must be between 6 and 10 characters")
             String account,
-
             @Size(min = 4, max = 5, message = "Agency must be between 4 and 5 characters")
             String agency,
             @Size(min = 3, max = 3, message = "Bank Code must be 3 characters")

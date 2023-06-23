@@ -1,6 +1,7 @@
 package com.jazztech.cardholder.domain;
 
 import com.jazztech.cardholder.infrastructure.persistence.enums.CardHolderStatusEnum;
+import jakarta.annotation.Nullable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -12,6 +13,7 @@ public record CardHolderDomain(
         UUID creditAnalysisId,
         CardHolderStatusEnum status,
         BigDecimal creditLimit,
+        @Nullable
         BankAccountDomain bankAccount,
         LocalDateTime createdAt
 ) {
