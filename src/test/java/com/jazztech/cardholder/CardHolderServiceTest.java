@@ -2,6 +2,7 @@ package com.jazztech.cardholder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -21,6 +22,7 @@ import com.jazztech.infrasctructure.Factory;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -71,7 +73,28 @@ public class CardHolderServiceTest {
     }
 
     @Test
-    public void should_throws_credit_analysis_not_approved() {
+    public void should_create_card_holder_active_without_bank_account() {
+        when(creditAnalysisApi.getCreditAnalysisId(clientIdCaptor.capture()))
+                .thenReturn(Factory.creditAnalysisDtoFactory());
+        when(cardHolderRepository.save(cardHolderEntityCaptor.capture()))
+                .thenReturn(Factory.cardHolderEntityFactory());
+
+        CardHolderRequestDto cardHolderRequestDto = Factory.cardHolderRequestDtoFactory().toBuilder()
+                .bankAccount(null)
+                .build();
+
+        CardHolderResponseDto cardHolderResponseDto = cardHolderService.createCardHolder(cardHolderRequestDto);
+
+        CardHolderEntity savedCardHolderEntity = cardHolderEntityCaptor.getValue();
+
+        assertNotNull(cardHolderResponseDto);
+        assertNull(savedCardHolderEntity.getBankAccount());
+        assertEquals(CardHolderStatusEnum.ACTIVE, cardHolderResponseDto.status());
+        assertEquals(cardHolderEntityCaptor.getValue().getCreditLimit().setScale(ROUND, RoundingMode.HALF_UP), cardHolderResponseDto.creditLimit());
+    }
+
+    @Test
+    public void should_throws_exception_when_credit_analysis_not_approved() {
         CreditAnalysisDto creditAnalysisDto = Factory.creditAnalysisDtoFactory().toBuilder()
                 .id(UUID.fromString("c85bc938-ecb2-4e33-a442-43fff8bfe9ff"))
                 .approved(false)
@@ -88,13 +111,14 @@ public class CardHolderServiceTest {
                 .creditAnalysisId(UUID.fromString("c85bc938-ecb2-4e33-a442-43fff8bfe9ff"))
                 .build();
 
-        CreditAnalysisNotApproved exception = assertThrows(CreditAnalysisNotApproved.class, () -> cardHolderService.createCardHolder(cardHolderRequestDto));
+        CreditAnalysisNotApproved exception =
+                assertThrows(CreditAnalysisNotApproved.class, () -> cardHolderService.createCardHolder(cardHolderRequestDto));
 
         assertEquals("Credit Analysis %s not approved".formatted(cardHolderRequestDto.creditAnalysisId()), exception.getMessage());
     }
 
     @Test
-    public void should_throws_credit_analysis_not_found() {
+    public void should_throws_exception_when_credit_analysis_not_found() {
         CardHolderRequestDto cardHolderRequestDto = Factory.cardHolderRequestDtoFactory().toBuilder()
                 .creditAnalysisId(UUID.fromString("c99bc938-ecb2-4e33-a442-43fff8bfe9ff"))
                 .build();
@@ -106,7 +130,7 @@ public class CardHolderServiceTest {
     }
 
     @Test
-    public void should_throws_card_holder_already_exists() {
+    public void should_throws_exception_when_card_holder_already_exists() {
         when(creditAnalysisApi.getCreditAnalysisId(clientIdCaptor.capture()))
                 .thenReturn(Factory.creditAnalysisDtoFactory());
         when(cardHolderRepository.findByClientId(clientIdCaptor.capture()))
@@ -115,5 +139,21 @@ public class CardHolderServiceTest {
         CardHolderRequestDto cardHolderRequestDto = Factory.cardHolderRequestDtoFactory();
 
         assertThrows(CardHolderAlreadyExists.class, () -> cardHolderService.createCardHolder(cardHolderRequestDto));
+    }
+
+    @Test
+    public void should_throws_exception_when_bank_account_fields_are_not_valid() {
+        when(creditAnalysisApi.getCreditAnalysisId(clientIdCaptor.capture()))
+                .thenReturn(Factory.creditAnalysisDtoFactory());
+
+        CardHolderRequestDto cardHolderRequestDto = Factory.cardHolderRequestDtoFactory().toBuilder()
+                .bankAccount(Objects.requireNonNull(Factory.cardHolderRequestDtoFactory().bankAccount()).toBuilder()
+                        .agency("1234")
+                        .account(null)
+                        .bankCode(null)
+                        .build())
+                .build();
+
+        assertThrows(IllegalArgumentException.class, () -> cardHolderService.createCardHolder(cardHolderRequestDto));
     }
 }

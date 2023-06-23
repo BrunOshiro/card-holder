@@ -164,6 +164,7 @@
 						<exclude>**/domain/**</exclude>
 						<exclude>**/creditanalysisapi/**</exclude>
 						<exclude>**/CardHolderApplication*</exclude>
+						<exclude>**/RestExceptionHandler*</exclude>
 					</excludes>
 				</configuration>
 				<executions>
