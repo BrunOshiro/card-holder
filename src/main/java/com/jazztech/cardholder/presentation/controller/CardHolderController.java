@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("api/v1.0/card-holders")
+@RequestMapping("v1.0/card-holders")
 @RequiredArgsConstructor
 @Validated
 public class CardHolderController {
