@@ -17,11 +17,11 @@ public class CardHolderSearch {
 
     public List<CardHolderResponseDto> getAllByStatus(CardHolderStatusEnum statusEnum) {
         return switch (statusEnum) {
-            case ACTIVE -> cardHolderMapper.entityListToDtoList(
+        case ACTIVE -> cardHolderMapper.entityListToDtoList(
                     cardHolderRepository.findByStatusEquals(CardHolderStatusEnum.ACTIVE));
-            case INACTIVE -> cardHolderMapper.entityListToDtoList(
+        case INACTIVE -> cardHolderMapper.entityListToDtoList(
                     cardHolderRepository.findByStatusEquals(CardHolderStatusEnum.INACTIVE));
-            default -> throw new CardHolderNotFound("Card Holder not found with the parameters provided. Status: " + statusEnum);
+        default -> throw new CardHolderNotFound("Card Holder not found with the parameters provided. Status: " + statusEnum);
         };
     }
 
