@@ -1,6 +1,7 @@
 package com.jazztech.cardholder.presentation.handler;
 
 import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderAlreadyExists;
+import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderNotFound;
 import com.jazztech.cardholder.infrastructure.handler.exception.CreditAnalysisNotApproved;
 import com.jazztech.cardholder.infrastructure.handler.exception.CreditAnalysisNotFound;
 import java.net.URI;
@@ -44,6 +45,16 @@ public class RestExceptionHandler {
     public ResponseEntity<ProblemDetail> creditAnalysisNotApprovedHandler(CreditAnalysisNotApproved e) {
         final ProblemDetail problemDetail = problemDetailBuilder(
                 HttpStatus.BAD_REQUEST, e.getClass().getSimpleName(),
+                e.getMessage(), e);
+        return ResponseEntity.status(problemDetail.getStatus())
+                .body(problemDetail
+                );
+    }
+
+    @ExceptionHandler(CardHolderNotFound.class)
+    public ResponseEntity<ProblemDetail> cardHolderNotFoundHandler(CardHolderNotFound e) {
+        final ProblemDetail problemDetail = problemDetailBuilder(
+                HttpStatus.NOT_FOUND, e.getClass().getSimpleName(),
                 e.getMessage(), e);
         return ResponseEntity.status(problemDetail.getStatus())
                 .body(problemDetail
