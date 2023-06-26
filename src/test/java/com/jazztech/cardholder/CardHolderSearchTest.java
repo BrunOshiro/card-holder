@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderNotFound;
+import com.jazztech.cardholder.infrastructure.persistence.enums.CardHolderStatusEnum;
 import com.jazztech.cardholder.infrastructure.persistence.mapper.CardHolderMapperImpl;
 import com.jazztech.cardholder.infrastructure.persistence.repository.CardHolderRepository;
 import com.jazztech.cardholder.service.CardHolderSearch;
@@ -34,5 +35,12 @@ public class CardHolderSearchTest {
         when(cardHolderRepository.findAll()).thenReturn(List.of());
 
         assertThrows(CardHolderNotFound.class, () -> cardHolderSearch.getAll());
+    }
+
+    @Test
+    public void should_throw_exception_when_card_holders_not_find_by_status() {
+        when(cardHolderRepository.findByStatusEquals(CardHolderStatusEnum.ACTIVE)).thenReturn(List.of());
+
+        assertThrows(CardHolderNotFound.class, () -> cardHolderSearch.getAllByStatus(CardHolderStatusEnum.ACTIVE));
     }
 }
