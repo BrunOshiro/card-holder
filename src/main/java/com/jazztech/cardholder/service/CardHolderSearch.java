@@ -18,7 +18,7 @@ public class CardHolderSearch {
     private final CardHolderMapper cardHolderMapper;
 
     public List<CardHolderResponseDto> getAllByStatus(String status) {
-        CardHolderStatusEnum statusEnum;
+        final CardHolderStatusEnum statusEnum;
 
         try {
             statusEnum = CardHolderStatusEnum.valueOf(status.toUpperCase());
@@ -33,10 +33,10 @@ public class CardHolderSearch {
         }
 
         return switch (statusEnum) {
-            case ACTIVE -> cardHolderMapper.entityListToDtoList(
-                    cardHolderRepository.findByStatusEquals(CardHolderStatusEnum.ACTIVE));
-            case INACTIVE -> cardHolderMapper.entityListToDtoList(
-                    cardHolderRepository.findByStatusEquals(CardHolderStatusEnum.INACTIVE));
+        case ACTIVE -> cardHolderMapper.entityListToDtoList(
+                cardHolderRepository.findByStatusEquals(CardHolderStatusEnum.ACTIVE));
+        case INACTIVE -> cardHolderMapper.entityListToDtoList(
+                cardHolderRepository.findByStatusEquals(CardHolderStatusEnum.INACTIVE));
         };
     }
 
