@@ -15,8 +15,13 @@ public record CardDomain(
         String cvv,
         String dueDate
 ) {
-    public Boolean isLimitAvailable(BigDecimal creditLimitRequested, BigDecimal creditLimitApproved) {
-        return creditLimitApproved.compareTo(creditLimitRequested) >= 0;
+    public BigDecimal limitAvailable(BigDecimal creditLimitApproved, BigDecimal creditLimitRequested, BigDecimal creditLimitUsed) {
+        final BigDecimal creditLimitUsedWithRequest = creditLimitUsed.add(creditLimitRequested);
+        return creditLimitApproved.subtract(creditLimitUsedWithRequest);
+    }
+
+    public Boolean isCreditLimitRequestedValid(BigDecimal creditLimitAvailable, BigDecimal creditLimitRequested) {
+        return creditLimitAvailable.compareTo(creditLimitRequested) >= 0;
     }
 
     public String generateCreditCardDueDate() {
