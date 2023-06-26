@@ -8,6 +8,7 @@ import com.jazztech.cardholder.infrastructure.persistence.repository.CardHolderR
 import com.jazztech.cardholder.presentation.dto.CardHolderResponseDto;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,7 @@ public class CardHolderSearch {
             statusEnum = CardHolderStatusEnum.valueOf(status.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new InvalidCardHolderStatusEnum(
-                    "Card Holder not found with the parameters provided. Status: " + status
+                    "Card Holder not found with the status provided. Status: " + status
                             + ". The expected parameters are one of these: " + EnumSet.allOf(CardHolderStatusEnum.class));
         }
 
@@ -45,5 +46,10 @@ public class CardHolderSearch {
             throw new CardHolderNotFound("There is no Card Holder registered yet");
         }
         return cardHolderMapper.entityListToDtoList(cardHolderRepository.findAll());
+    }
+
+    public CardHolderResponseDto getById(UUID id) {
+        return cardHolderMapper.entityToDto(cardHolderRepository.findById(id)
+                .orElseThrow(() -> new CardHolderNotFound("Card Holder not found with the provided Id: " + id)));
     }
 }

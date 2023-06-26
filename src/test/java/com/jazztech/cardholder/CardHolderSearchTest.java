@@ -10,9 +10,12 @@ import com.jazztech.cardholder.infrastructure.persistence.entity.CardHolderEntit
 import com.jazztech.cardholder.infrastructure.persistence.enums.CardHolderStatusEnum;
 import com.jazztech.cardholder.infrastructure.persistence.mapper.CardHolderMapperImpl;
 import com.jazztech.cardholder.infrastructure.persistence.repository.CardHolderRepository;
+import com.jazztech.cardholder.presentation.dto.CardHolderResponseDto;
 import com.jazztech.cardholder.service.CardHolderSearch;
 import com.jazztech.infrasctructure.Factory;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -58,7 +61,8 @@ public class CardHolderSearchTest {
     public void should_get_all_card_holders_by_status_enum_active_param_using_lower_case() {
         List<CardHolderEntity> cardHolderEntities = Factory.cardHolderEntityListFactory(5);
 
-        when(cardHolderRepository.findByStatusEquals(CardHolderStatusEnum.ACTIVE)).thenReturn(cardHolderEntities.stream()
+        when(cardHolderRepository.findByStatusEquals(CardHolderStatusEnum.ACTIVE))
+                .thenReturn(cardHolderEntities.stream()
                 .filter(cardHolderEntity -> cardHolderEntity.getStatus().equals(CardHolderStatusEnum.ACTIVE))
                 .collect(Collectors.toList()));
 
@@ -73,7 +77,8 @@ public class CardHolderSearchTest {
     public void should_get_all_card_holders_by_status_enum_inactive() {
         List<CardHolderEntity> cardHolderEntities = Factory.cardHolderEntityListFactory(10);
 
-        when(cardHolderRepository.findByStatusEquals(CardHolderStatusEnum.INACTIVE)).thenReturn(cardHolderEntities.stream()
+        when(cardHolderRepository.findByStatusEquals(CardHolderStatusEnum.INACTIVE))
+                .thenReturn(cardHolderEntities.stream()
                 .filter(cardHolderEntity -> cardHolderEntity.getStatus().equals(CardHolderStatusEnum.INACTIVE))
                 .collect(Collectors.toList()));
 
@@ -88,7 +93,8 @@ public class CardHolderSearchTest {
     public void should_get_all_card_holders_by_status_enum_active() {
         List<CardHolderEntity> cardHolderEntities = Factory.cardHolderEntityListFactory(15);
 
-        when(cardHolderRepository.findByStatusEquals(CardHolderStatusEnum.ACTIVE)).thenReturn(cardHolderEntities.stream()
+        when(cardHolderRepository.findByStatusEquals(CardHolderStatusEnum.ACTIVE))
+                .thenReturn(cardHolderEntities.stream()
                 .filter(cardHolderEntity -> cardHolderEntity.getStatus().equals(CardHolderStatusEnum.ACTIVE))
                 .collect(Collectors.toList()));
 
@@ -108,5 +114,25 @@ public class CardHolderSearchTest {
         cardHolderSearch.getAll();
 
         assertEquals(cardHolderEntities.size(), cardHolderSearch.getAll().size());
+    }
+
+    @Test
+    public void should_get_card_holder_by_id() {
+        CardHolderEntity cardHolderEntity = Factory.cardHolderEntityFactory();
+
+        when(cardHolderRepository.findById(UUID.fromString("abf5d31a-ebb3-47e0-a441-f0487dd804e9")))
+                .thenReturn(Optional.ofNullable(cardHolderEntity));
+
+        CardHolderResponseDto cardHolderResponseDto = cardHolderSearch.getById(UUID.fromString("abf5d31a-ebb3-47e0-a441-f0487dd804e9"));
+
+        assertEquals(mapperImpl.entityToDto(cardHolderEntity), cardHolderResponseDto);
+    }
+
+    @Test
+    public void should_throw_exception_when_card_holder_not_found_by_id() {
+        when(cardHolderRepository.findById(UUID.fromString("abf5d31a-ebb3-47e0-a441-f0487dd804e9")))
+                .thenReturn(Optional.empty());
+
+        assertThrows(CardHolderNotFound.class, () -> cardHolderSearch.getById(UUID.fromString("abf5d31a-ebb3-47e0-a441-f0487dd804e9")));
     }
 }
