@@ -1,6 +1,8 @@
 package com.jazztech.cardholder.domain;
 
+import com.jazztech.cardholder.infrastructure.handler.exception.CreditLimitNotAvailable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
@@ -15,28 +17,45 @@ public record CardDomain(
         String cvv,
         String dueDate
 ) {
+    private static final Integer ROUND = 2;
+
     public BigDecimal limitAvailable(BigDecimal creditLimitApproved, BigDecimal creditLimitRequested, BigDecimal creditLimitUsed) {
         final BigDecimal creditLimitUsedWithRequest = creditLimitUsed.add(creditLimitRequested);
         return creditLimitApproved.subtract(creditLimitUsedWithRequest);
     }
 
-    public Boolean isCreditLimitRequestedValid(BigDecimal creditLimitAvailable, BigDecimal creditLimitRequested) {
+    public CardDomain createCardDomain(UUID cardHolderId, BigDecimal limitRequested, BigDecimal limitAvailable) {
+        if (!isCreditLimitRequestedValid(limitAvailable, limitRequested)) {
+            throw new CreditLimitNotAvailable("Credit limit requested is less than the limit available to the card holder.");
+        }
+
+        return CardDomain.builder()
+                .creditLimit(limitRequested.setScale(ROUND, RoundingMode.HALF_UP))
+                .cardHolderId(cardHolderId)
+                .cardNumber(generateCreditCardNumber())
+                .cvv(generateCreditCardCvv())
+                .dueDate(generateCreditCardDueDate())
+                .build();
+    }
+
+    private Boolean isCreditLimitRequestedValid(BigDecimal creditLimitAvailable, BigDecimal creditLimitRequested) {
         return creditLimitAvailable.compareTo(creditLimitRequested) >= 0;
     }
 
-    public String generateCreditCardDueDate() {
+    private String generateCreditCardDueDate() {
         LocalDate currentDate = LocalDate.now();
         int currentMonth = currentDate.getMonthValue();
         int currentYear = currentDate.getYear();
+        int dueYear = currentYear + 5;
 
-        LocalDate saveDate = LocalDate.of(currentYear, currentMonth, 30);
+        LocalDate dateToUse = LocalDate.of(dueYear, currentMonth, 30);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yyyy");
 
-        return saveDate.format(formatter);
+        return dateToUse.format(formatter);
     }
 
-    public String generateCreditCardCvv() {
+    private String generateCreditCardCvv() {
         Random random = new Random();
         StringBuilder cvv = new StringBuilder();
 
@@ -47,7 +66,7 @@ public record CardDomain(
         return cvv.toString();
     }
 
-    public String generateCreditCardNumber() {
+    private String generateCreditCardNumber() {
         Random random = new Random();
         StringBuilder cardNumber = new StringBuilder();
         String issuer = "American Express";

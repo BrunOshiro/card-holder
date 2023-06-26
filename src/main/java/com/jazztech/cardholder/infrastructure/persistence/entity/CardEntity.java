@@ -6,13 +6,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Getter
@@ -24,9 +25,9 @@ public class CardEntity {
     @GeneratedValue(generator = "uuid2")
     UUID id;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "card_holder_id", referencedColumnName = "id")
-    UUID cardHolderId;
+    CardHolderEntity cardHolder;
 
     @Column(name = "credit_limit")
     BigDecimal creditLimit;
@@ -39,6 +40,7 @@ public class CardEntity {
     @Column(name = "due_date")
     String dueDate;
 
+    @CreationTimestamp
     @Column(name = "created_at")
     LocalDateTime createdAt;
 
@@ -46,13 +48,13 @@ public class CardEntity {
     }
 
     public CardEntity(
-            UUID cardHolderId,
+            CardHolderEntity cardHolder,
             BigDecimal creditLimit,
             String cardNumber,
             String cvv,
             String dueDate
     ) {
-        this.cardHolderId = cardHolderId;
+        this.cardHolder = cardHolder;
         this.creditLimit = creditLimit;
         this.cardNumber = cardNumber;
         this.cvv = cvv;

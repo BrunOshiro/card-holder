@@ -2,9 +2,7 @@ package com.jazztech.cardholder.service;
 
 import com.jazztech.cardholder.domain.CardDomain;
 import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderNotFound;
-import com.jazztech.cardholder.infrastructure.handler.exception.CreditLimitNotAvailable;
 import com.jazztech.cardholder.infrastructure.persistence.entity.CardEntity;
-import com.jazztech.cardholder.infrastructure.persistence.entity.CardHolderEntity;
 import com.jazztech.cardholder.infrastructure.persistence.mapper.CardMapper;
 import com.jazztech.cardholder.infrastructure.persistence.repository.CardHolderRepository;
 import com.jazztech.cardholder.infrastructure.persistence.repository.CardRepository;
@@ -14,11 +12,15 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
 @Service
 public class CardService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CardService.class);
+
     CardHolderRepository cardHolderRepository;
     CardRepository cardRepository;
     CardMapper cardMapper;
@@ -27,8 +29,9 @@ public class CardService {
     @Transactional
     public CardResponseDto createCard(UUID cardHolderId, BigDecimal limitRequested) {
         BigDecimal limitAvailable = getCreditAvailableToTheCardHolder(cardHolderId, limitRequested);
-        CardDomain createdCardDomain = createCardDomain(cardHolderId, limitRequested, limitAvailable);
+        CardDomain createdCardDomain = cardDomain.createCardDomain(cardHolderId, limitRequested, limitAvailable);
         CardEntity savedCardEntity = cardRepository.save(cardMapper.domainToEntity(createdCardDomain));
+        LOGGER.info("Card created: {}", savedCardEntity);
         return cardMapper.entityToDto(savedCardEntity);
     }
 
@@ -37,8 +40,7 @@ public class CardService {
             throw new CardHolderNotFound("Card Holder not found with the provided Id: " + cardHolderId);
         }
 
-        CardHolderEntity cardHolderEntity = cardHolderRepository.findById(cardHolderId).get();
-        BigDecimal creditLimitApproved = cardHolderEntity.getCreditLimit();
+        BigDecimal creditLimitApproved = cardHolderRepository.findById(cardHolderId).get().getCreditLimit();
         BigDecimal creditLimitUsed;
 
         if (cardRepository.findByCardHolderId(cardHolderId) != null) {
@@ -49,19 +51,5 @@ public class CardService {
         }
 
         return cardDomain.limitAvailable(creditLimitApproved, creditLimit, creditLimitUsed);
-    }
-
-    private CardDomain createCardDomain(UUID cardHolderId, BigDecimal limitRequested, BigDecimal limitAvailable) {
-        if (!cardDomain.isCreditLimitRequestedValid(limitAvailable, limitRequested)) {
-            throw new CreditLimitNotAvailable("Credit limit requested is less than the limit available to the card holder.");
-        }
-
-        return CardDomain.builder()
-                .creditLimit(limitRequested)
-                .cardHolderId(cardHolderId)
-                .cardNumber(cardDomain.generateCreditCardNumber())
-                .cvv(cardDomain.generateCreditCardCvv())
-                .dueDate(cardDomain.generateCreditCardDueDate())
-                .build();
     }
 }
