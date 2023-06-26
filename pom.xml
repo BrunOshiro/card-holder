@@ -19,11 +19,12 @@
 		<mapstruct.version>1.5.5.Final</mapstruct.version>
 		<lombok.version>1.18.26</lombok.version>
 		<postgresql.version>42.6.0</postgresql.version>
-		<spring-cloud.version>2022.0.1</spring-cloud.version>
 		<jacoco-maven-plugin.version>0.8.10</jacoco-maven-plugin.version>
 		<maven-compiler-plugin.version>3.9.0</maven-compiler-plugin.version>
 		<maven-checkstyle-plugin.version>3.2.2</maven-checkstyle-plugin.version>
 		<snakeyaml.version>2.0</snakeyaml.version>
+		<jackson.version>2.15.1</jackson.version>
+		<jakarta.version>3.0.2</jakarta.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -47,6 +48,10 @@
 			<artifactId>spring-boot-starter-undertow</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
@@ -64,6 +69,11 @@
 			<artifactId>lombok</artifactId>
 			<version>${lombok.version}</version>
 			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.validation</groupId>
+			<artifactId>jakarta.validation-api</artifactId>
+			<version>${jakarta.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mapstruct</groupId>
@@ -91,6 +101,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
 		</dependency>
 	</dependencies>
 
@@ -138,6 +153,20 @@
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>${jacoco-maven-plugin.version}</version>
+				<configuration>
+					<excludes>
+						<exclude>**/dto/**</exclude>
+						<exclude>**/repository/**</exclude>
+						<exclude>**/config/**</exclude>
+						<exclude>**/controller/**</exclude>
+						<exclude>**/exceptions/**</exclude>
+						<exclude>**/infrastructure/**</exclude>
+						<exclude>**/domain/**</exclude>
+						<exclude>**/creditanalysisapi/**</exclude>
+						<exclude>**/CardHolderApplication*</exclude>
+						<exclude>**/RestExceptionHandler*</exclude>
+					</excludes>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>

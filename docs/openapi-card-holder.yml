@@ -1,0 +1,327 @@
+openapi: 3.0.0
+info:
+  title: Card Holders API
+  version: 1.0.0
+  description: |-
+    Api responsible for card holder and credit card. This allows the registration of the Card Holder so that it is possible to enable Credit Card.
+servers:
+  - url: http://localhost/v1.0
+paths:
+  /card-holders:
+    post:
+      summary: Create Card Holder
+      description: Creates a new Card Holder.
+      tags:
+        - card holders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardHolderRequest"
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardHolderResponse"
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/problemDetail'
+        '500':
+          description: Unexpected error
+    get:
+      summary: Get All Card Holders
+      description: Retrieves all Card Holders.
+      tags:
+        - card holders
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            format: enum
+            enum: [ACTIVE, INACTIVE]
+            example: ACTIVE
+            description: filter card holders by status
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardHolderListResponse"
+        '500':
+          description: Unexpected error
+  /card-holders/{id}:
+    get:
+      summary: Get Card Holder by ID
+      description: Retrieves a specific Card Holder by ID.
+      tags:
+        - card holders
+      parameters:
+        - name: id
+          in: path
+          description: ID of the Card Holder to retrieve
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardHolderResponse"
+        '404':
+          description: Card holder not found
+  /card-holders/{cardHolderId}/cards:
+    post:
+      summary: Create Card
+      description: Creates a new card for a specific card holder.
+      tags:
+        - cards
+      parameters:
+        - name: cardHolderId
+          in: path
+          description: ID of the card holder
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardRequest"
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardResponse"
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/problemDetail'
+        '500':
+          description: Unexpected error
+    get:
+      summary: Get All Cards for a Card Holder
+      description: Retrieves all cards for a specific card holder.
+      tags:
+        - cards
+      parameters:
+        - name: cardHolderId
+          in: path
+          description: ID of the card holder
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardListResponse"
+        '500':
+          description: Unexpected error
+  /card-holders/{cardHolderId}/cards/{cardId}:
+    get:
+      summary: Get Card by ID
+      description: Retrieves a specific card by ID for a given card holder.
+      tags:
+        - cards
+      parameters:
+        - name: cardHolderId
+          in: path
+          description: ID of the card holder
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: cardId
+          in: path
+          description: ID of the card
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardResponse"
+    patch:
+      summary: Update Card Limit
+      description: Updates the creditLimit of a specific card.
+      tags:
+        - cards
+      parameters:
+        - name: cardHolderId
+          in: path
+          description: ID of the card holder
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: cardId
+          in: path
+          description: ID of the card
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LimitUpdateRequest"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LimitUpdateResponse"
+components:
+  schemas:
+    CardHolderRequest:
+      type: object
+      properties:
+        clientId:
+          type: string
+          format: uuid
+          description: client identifier
+        creditAnalysisId:
+          type: string
+          format: uuid
+          description: credit analisys identifier
+        bankAccount:
+          type: object
+          properties:
+            account:
+              type: string
+              example: 27184771-6
+              description: account number
+            agency:
+              type: string
+              example: 1121
+              description: agency number
+            bankCode:
+              type: string
+              example: 302
+              description: bank code
+          required:
+            - account
+            - agency
+            - bankCode
+      required:
+        - clientId
+        - creditAnalysisId
+    CardHolderResponse:
+      type: object
+      properties:
+        cardHolderId:
+          type: string
+          format: uuid
+          description: card holder identifier
+        status:
+          type: string
+          description: card holder situation
+          enum: [ACTIVE, INACTIVE]
+        limit:
+          type: number
+          description: card holder creditLimit account
+        createdAt:
+          type: string
+          format: date-time
+          description: date of card holder created
+    CardHolderListResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/CardHolderResponse"
+    CardRequest:
+      type: object
+      properties:
+        cardHolderId:
+          type: string
+          format: uuid
+        limit:
+          type: number
+          format: float
+
+    CardResponse:
+      type: object
+      properties:
+        cardId:
+          type: string
+          format: uuid
+          description: Card identifier
+        cardNumber:
+          type: string
+          description: Card Number
+          example: 5345 0716 0034 2038
+        cvv:
+          type: integer
+          description: Card Verification Value
+          example: 759
+        dueDate:
+          type: string
+          format: date
+          description: Card due date
+          example: 2024-05-20
+    CardListResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/CardResponse"
+    LimitUpdateRequest:
+      type: object
+      properties:
+        limit:
+          type: number
+
+    LimitUpdateResponse:
+      type: object
+      properties:
+        cardId:
+          type: string
+        updatedLimit:
+          type: number
+    problemDetail:
+      properties:
+        type:
+          type: string
+          format: uri
+          description: A URI reference that identifies the problem
+          example: http://example.com/already-exist
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type
+          example: Card Holder Alread Existe
+        status:
+          type: string
+          description: The HTTP status code
+          example: 422
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem
+          example: Card Holder already registered, check the data sent for registration
+        instance:
+          type: string
+          description: A URI that represents the specific occurrence of the problem
+          example: "/card-holders"
