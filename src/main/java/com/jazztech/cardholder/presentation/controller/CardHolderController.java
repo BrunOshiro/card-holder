@@ -1,6 +1,5 @@
 package com.jazztech.cardholder.presentation.controller;
 
-import com.jazztech.cardholder.infrastructure.persistence.enums.CardHolderStatusEnum;
 import com.jazztech.cardholder.presentation.dto.CardHolderRequestDto;
 import com.jazztech.cardholder.presentation.dto.CardHolderResponseDto;
 import com.jazztech.cardholder.service.CardHolderSearch;
@@ -40,7 +39,7 @@ public class CardHolderController {
     @GetMapping
     @ResponseStatus(value = HttpStatus.OK)
     public List<CardHolderResponseDto> searchAllCardHolders(
-            @RequestParam(value = "status", required = false) CardHolderStatusEnum status
+            @RequestParam(value = "status", required = false) String status
     ) {
         if (status != null) {
             LOGGER.info("Search Card Holders by status " + status + " requested");

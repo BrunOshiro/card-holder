@@ -4,6 +4,7 @@ import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderAlread
 import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderNotFound;
 import com.jazztech.cardholder.infrastructure.handler.exception.CreditAnalysisNotApproved;
 import com.jazztech.cardholder.infrastructure.handler.exception.CreditAnalysisNotFound;
+import com.jazztech.cardholder.infrastructure.handler.exception.InvalidCardHolderStatusEnum;
 import java.net.URI;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -55,6 +56,16 @@ public class RestExceptionHandler {
     public ResponseEntity<ProblemDetail> cardHolderNotFoundHandler(CardHolderNotFound e) {
         final ProblemDetail problemDetail = problemDetailBuilder(
                 HttpStatus.NOT_FOUND, e.getClass().getSimpleName(),
+                e.getMessage(), e);
+        return ResponseEntity.status(problemDetail.getStatus())
+                .body(problemDetail
+                );
+    }
+
+    @ExceptionHandler(InvalidCardHolderStatusEnum.class)
+    public ResponseEntity<ProblemDetail> invalidCardHolderStatusEnumHandler(InvalidCardHolderStatusEnum e) {
+        final ProblemDetail problemDetail = problemDetailBuilder(
+                HttpStatus.BAD_REQUEST, e.getClass().getSimpleName(),
                 e.getMessage(), e);
         return ResponseEntity.status(problemDetail.getStatus())
                 .body(problemDetail
