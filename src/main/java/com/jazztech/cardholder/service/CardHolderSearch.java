@@ -31,6 +31,7 @@ public class CardHolderSearch {
         if (cardHolderRepository.findByStatusEquals(statusEnum).isEmpty()) {
             throw new CardHolderNotFound("Card Holder not found with the parameters provided. Status: " + statusEnum);
         }
+
         return switch (statusEnum) {
             case ACTIVE -> cardHolderMapper.entityListToDtoList(
                     cardHolderRepository.findByStatusEquals(CardHolderStatusEnum.ACTIVE));
