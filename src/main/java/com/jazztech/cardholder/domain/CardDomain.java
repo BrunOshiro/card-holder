@@ -30,6 +30,7 @@ public class CardDomain {
     private static final int CVV_MAX_LENGTH = 3;
     private static final int LUHN_DOUBLE_FACTOR = 2;
     private static final int CARD_NUMBER_LENGTH = 15;
+    private static final int CARD_NUMBER_GROUP_SIZE = 4;
 
     UUID cardHolderId;
     BigDecimal creditLimit;
@@ -154,8 +155,11 @@ public class CardDomain {
         }
 
         final int checkDigit = calculateLuhnCheckDigit(cardNumber.toString());
-
         cardNumber.append(checkDigit);
+
+        for (int i = CARD_NUMBER_GROUP_SIZE; i < cardNumber.length(); i += CARD_NUMBER_GROUP_SIZE + 1) {
+            cardNumber.insert(i, " ");
+        }
 
         return cardNumber.toString();
     }
