@@ -8,20 +8,96 @@ import java.time.format.DateTimeFormatter;
 import java.util.Random;
 import java.util.UUID;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.stereotype.Component;
 
+@Component
+@Getter
+@Setter
 @Builder(toBuilder = true)
-public record CardDomain(
-        UUID cardHolderId,
-        BigDecimal creditLimit,
-        String cardNumber,
-        String cvv,
-        String dueDate
-) {
+public class CardDomain {
+
     private static final Integer ROUND = 2;
+    private static final int AMERICAN_EXPRESS_MIN_RANGE = 34;
+    private static final int AMERICAN_EXPRESS_MAX_RANGE = 37;
+    private static final int MASTERCARD_MIN_RANGE = 51;
+    private static final int MASTERCARD_MAX_RANGE = 55;
+    private static final int RANDOM_NUM_RANGE = 10;
+    private static final int MODULUS = 10;
+    private static final int DIGIT_TEN = 10;
+    private static final int DIGIT_NINE = 9;
+    private static final int CVV_MAX_LENGTH = 3;
+    private static final int LUHN_DOUBLE_FACTOR = 2;
+    private static final int CARD_NUMBER_LENGTH = 15;
+
+    UUID cardHolderId;
+    BigDecimal creditLimit;
+    String cardNumber;
+    String cvv;
+    String dueDate;
+
+    public CardDomain() {
+    }
+
+    public CardDomain(
+            UUID cardHolderId,
+            BigDecimal creditLimit,
+            String cardNumber,
+            String cvv,
+            String dueDate
+    ) {
+        this.cardHolderId = cardHolderId;
+        this.creditLimit = creditLimit;
+        this.cardNumber = cardNumber;
+        this.cvv = cvv;
+        this.dueDate = dueDate;
+    }
+
+    private static String getIssuerDigits(String issuer) {
+        if ("Visa".equalsIgnoreCase(issuer)) {
+            return "4";
+        } else if ("Mastercard".equalsIgnoreCase(issuer)) {
+            final int prefix = getRandomNumberInRange(MASTERCARD_MIN_RANGE, MASTERCARD_MAX_RANGE);
+            return String.valueOf(prefix);
+        } else if ("American Express".equalsIgnoreCase(issuer)) {
+            final int prefix = getRandomNumberInRange(AMERICAN_EXPRESS_MIN_RANGE, AMERICAN_EXPRESS_MAX_RANGE);
+            return String.valueOf(prefix);
+        }
+
+        return "";
+    }
+
+    private static int getRandomNumberInRange(int min, int max) {
+        final Random random = new Random();
+        return random.nextInt((max - min) + 1) + min;
+    }
+
+    private static int calculateLuhnCheckDigit(String cardNumber) {
+        int sum = 0;
+        boolean alternate = false;
+
+        for (int i = cardNumber.length() - 1; i >= 0; i--) {
+            int digit = Integer.parseInt(cardNumber.substring(i, i + 1));
+
+            if (alternate) {
+                digit *= LUHN_DOUBLE_FACTOR;
+                if (digit > DIGIT_NINE) {
+                    digit = digit % MODULUS + 1;
+                }
+            }
+
+            sum += digit;
+            alternate = !alternate;
+        }
+
+        final int checkDigit = DIGIT_TEN - (sum % MODULUS);
+        return (checkDigit == DIGIT_TEN) ? 0 : checkDigit;
+    }
 
     public BigDecimal limitAvailable(BigDecimal creditLimitApproved, BigDecimal creditLimitRequested, BigDecimal creditLimitUsed) {
-        final BigDecimal creditLimitUsedWithRequest = creditLimitUsed.add(creditLimitRequested);
-        return creditLimitApproved.subtract(creditLimitUsedWithRequest);
+        final BigDecimal creditLimitUsedWithRequest = creditLimitUsed.add(creditLimitRequested).setScale(ROUND, RoundingMode.HALF_UP);
+        return creditLimitApproved.subtract(creditLimitUsedWithRequest).setScale(ROUND, RoundingMode.HALF_UP);
     }
 
     public CardDomain createCardDomain(UUID cardHolderId, BigDecimal limitRequested, BigDecimal limitAvailable) {
@@ -43,85 +119,44 @@ public record CardDomain(
     }
 
     private String generateCreditCardDueDate() {
-        LocalDate currentDate = LocalDate.now();
-        int currentMonth = currentDate.getMonthValue();
-        int currentYear = currentDate.getYear();
-        int dueYear = currentYear + 5;
+        final LocalDate currentDate = LocalDate.now();
+        final int currentMonth = currentDate.getMonthValue();
+        final int currentYear = currentDate.getYear();
+        final int dueYear = currentYear + 5;
 
-        LocalDate dateToUse = LocalDate.of(dueYear, currentMonth, 30);
+        final LocalDate dateToUse = LocalDate.of(dueYear, currentMonth, currentDate.lengthOfMonth());
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yyyy");
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yyyy");
 
         return dateToUse.format(formatter);
     }
 
     private String generateCreditCardCvv() {
-        Random random = new Random();
-        StringBuilder cvv = new StringBuilder();
+        final Random random = new Random();
+        final StringBuilder cvv = new StringBuilder();
 
-        while (cvv.length() < 3) {
-            cvv.append(random.nextInt(10));
+        while (cvv.length() < CVV_MAX_LENGTH) {
+            cvv.append(random.nextInt(RANDOM_NUM_RANGE));
         }
 
         return cvv.toString();
     }
 
     private String generateCreditCardNumber() {
-        Random random = new Random();
-        StringBuilder cardNumber = new StringBuilder();
-        String issuer = "American Express";
+        final Random random = new Random();
+        final StringBuilder cardNumber = new StringBuilder();
+        final String issuer = "American Express";
 
         cardNumber.append(getIssuerDigits(issuer));
 
-        while (cardNumber.length() < 15) {
-            cardNumber.append(random.nextInt(10));
+        while (cardNumber.length() < CARD_NUMBER_LENGTH) {
+            cardNumber.append(random.nextInt(RANDOM_NUM_RANGE));
         }
 
-        int checkDigit = calculateLuhnCheckDigit(cardNumber.toString());
+        final int checkDigit = calculateLuhnCheckDigit(cardNumber.toString());
 
         cardNumber.append(checkDigit);
 
         return cardNumber.toString();
-    }
-
-    private static String getIssuerDigits(String issuer) {
-        if (issuer.equalsIgnoreCase("Visa")) {
-            return "4";
-        } else if (issuer.equalsIgnoreCase("Mastercard")) {
-            int prefix = getRandomNumberInRange(51, 55);
-            return String.valueOf(prefix);
-        } else if (issuer.equalsIgnoreCase("American Express")) {
-            int prefix = getRandomNumberInRange(34, 37);
-            return String.valueOf(prefix);
-        }
-
-        return "";
-    }
-
-    private static int getRandomNumberInRange(int min, int max) {
-        Random random = new Random();
-        return random.nextInt((max - min) + 1) + min;
-    }
-
-    private static int calculateLuhnCheckDigit(String cardNumber) {
-        int sum = 0;
-        boolean alternate = false;
-
-        for (int i = cardNumber.length() - 1; i >= 0; i--) {
-            int digit = Integer.parseInt(cardNumber.substring(i, i + 1));
-
-            if (alternate) {
-                digit *= 2;
-                if (digit > 9) {
-                    digit = digit % 10 + 1;
-                }
-            }
-
-            sum += digit;
-            alternate = !alternate;
-        }
-
-        int checkDigit = 10 - (sum % 10);
-        return (checkDigit == 10) ? 0 : checkDigit;
     }
 }
