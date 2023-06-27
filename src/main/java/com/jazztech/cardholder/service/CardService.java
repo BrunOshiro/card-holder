@@ -11,10 +11,11 @@ import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
+@RequiredArgsConstructor
 @Service
 public class CardService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CardService.class);
@@ -23,13 +24,6 @@ public class CardService {
     private final CardRepository cardRepository;
     private final CardMapper cardMapper;
     private final CardDomain cardDomain;
-
-    public CardService(CardHolderRepository cardHolderRepository, CardRepository cardRepository, CardMapper cardMapper, CardDomain cardDomain) {
-        this.cardHolderRepository = cardHolderRepository;
-        this.cardRepository = cardRepository;
-        this.cardMapper = cardMapper;
-        this.cardDomain = cardDomain;
-    }
 
     @Transactional
     public CardResponseDto createCard(UUID cardHolderId, BigDecimal limitRequested) {

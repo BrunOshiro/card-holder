@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 @Setter
 @Builder(toBuilder = true)
 public class CardDomain {
-
     private static final Integer ROUND = 2;
     private static final int AMERICAN_EXPRESS_MIN_RANGE = 34;
     private static final int AMERICAN_EXPRESS_MAX_RANGE = 37;
@@ -40,7 +39,6 @@ public class CardDomain {
 
     public CardDomain() {
     }
-
     public CardDomain(
             UUID cardHolderId,
             BigDecimal creditLimit,
@@ -53,6 +51,26 @@ public class CardDomain {
         this.cardNumber = cardNumber;
         this.cvv = cvv;
         this.dueDate = dueDate;
+    }
+
+
+    public BigDecimal limitAvailable(BigDecimal creditLimitApproved, BigDecimal creditLimitRequested, BigDecimal creditLimitUsed) {
+        final BigDecimal creditLimitUsedWithRequest = creditLimitUsed.add(creditLimitRequested).setScale(ROUND, RoundingMode.HALF_UP);
+        return creditLimitApproved.subtract(creditLimitUsedWithRequest);
+    }
+
+    public CardDomain createCardDomain(UUID cardHolderId, BigDecimal limitRequested, BigDecimal limitAvailable) {
+        if (!isCreditLimitRequestedValid(limitAvailable, limitRequested)) {
+            throw new CreditLimitNotAvailable("Credit limit requested is less than the limit available to the card holder.");
+        }
+
+        return CardDomain.builder()
+                .creditLimit(limitRequested.setScale(ROUND, RoundingMode.HALF_UP))
+                .cardHolderId(cardHolderId)
+                .cardNumber(generateCreditCardNumber())
+                .cvv(generateCreditCardCvv())
+                .dueDate(generateCreditCardDueDate())
+                .build();
     }
 
     private static String getIssuerDigits(String issuer) {
@@ -94,25 +112,6 @@ public class CardDomain {
 
         final int checkDigit = DIGIT_TEN - (sum % MODULUS);
         return (checkDigit == DIGIT_TEN) ? 0 : checkDigit;
-    }
-
-    public BigDecimal limitAvailable(BigDecimal creditLimitApproved, BigDecimal creditLimitRequested, BigDecimal creditLimitUsed) {
-        final BigDecimal creditLimitUsedWithRequest = creditLimitUsed.add(creditLimitRequested).setScale(ROUND, RoundingMode.HALF_UP);
-        return creditLimitApproved.subtract(creditLimitUsedWithRequest).setScale(ROUND, RoundingMode.HALF_UP);
-    }
-
-    public CardDomain createCardDomain(UUID cardHolderId, BigDecimal limitRequested, BigDecimal limitAvailable) {
-        if (!isCreditLimitRequestedValid(limitAvailable, limitRequested)) {
-            throw new CreditLimitNotAvailable("Credit limit requested is less than the limit available to the card holder.");
-        }
-
-        return CardDomain.builder()
-                .creditLimit(limitRequested.setScale(ROUND, RoundingMode.HALF_UP))
-                .cardHolderId(cardHolderId)
-                .cardNumber(generateCreditCardNumber())
-                .cvv(generateCreditCardCvv())
-                .dueDate(generateCreditCardDueDate())
-                .build();
     }
 
     private Boolean isCreditLimitRequestedValid(BigDecimal creditLimitAvailable, BigDecimal creditLimitRequested) {
