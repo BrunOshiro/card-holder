@@ -1,4 +1,4 @@
-package com.jazztech.cardholder.domain;
+package com.jazztech.cardholder.domain.entity;
 
 import com.jazztech.cardholder.infrastructure.persistence.enums.CardHolderStatusEnum;
 import jakarta.annotation.Nullable;
@@ -8,7 +8,7 @@ import java.util.UUID;
 import lombok.Builder;
 
 @Builder(toBuilder = true)
-public record CardHolderDomain(
+public record CardHolder(
         UUID clientId,
         UUID creditAnalysisId,
         CardHolderStatusEnum status,

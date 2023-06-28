@@ -1,6 +1,6 @@
 package com.jazztech.cardholder.service;
 
-import com.jazztech.cardholder.domain.CardHolderDomain;
+import com.jazztech.cardholder.domain.entity.CardHolder;
 import com.jazztech.cardholder.infrastructure.creditanalysisapi.CreditAnalysisApi;
 import com.jazztech.cardholder.infrastructure.creditanalysisapi.dto.CreditAnalysisDto;
 import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderAlreadyExists;
@@ -38,8 +38,8 @@ public class CardHolderService {
         final CreditAnalysisDto creditAnalysis =
                 getCreditAnalysisFromApiAndValidate(cardHolderRequestDto.creditAnalysisId());
 
-        final CardHolderDomain cardHolderDomain = createCardHolderDomain(cardHolderRequestDto, creditAnalysis);
-        final CardHolderEntity savedCardHolderEntity = saveCardHolder(cardHolderMapper.domainToEntity(cardHolderDomain));
+        final CardHolder cardHolder = createCardHolderDomain(cardHolderRequestDto, creditAnalysis);
+        final CardHolderEntity savedCardHolderEntity = saveCardHolder(cardHolderMapper.domainToEntity(cardHolder));
 
         LOGGER.info("CardHolder created: {}", savedCardHolderEntity);
         return cardHolderMapper.entityToDto(savedCardHolderEntity);
@@ -55,8 +55,8 @@ public class CardHolderService {
         }
     }
 
-    private CardHolderDomain createCardHolderDomain(CardHolderRequestDto cardHolderRequestDto, CreditAnalysisDto creditAnalysisDto) {
-        return CardHolderDomain.builder()
+    private CardHolder createCardHolderDomain(CardHolderRequestDto cardHolderRequestDto, CreditAnalysisDto creditAnalysisDto) {
+        return CardHolder.builder()
                 .clientId(cardHolderRequestDto.clientId())
                 .creditAnalysisId(creditAnalysisDto.id())
                 .status(CardHolderStatusEnum.ACTIVE)
@@ -66,13 +66,13 @@ public class CardHolderService {
                 .build();
     }
 
-    private CardHolderDomain.BankAccountDomain createBankAccountDomain(CardHolderRequestDto cardHolderRequestDto) {
+    private CardHolder.BankAccountDomain createBankAccountDomain(CardHolderRequestDto cardHolderRequestDto) {
         if (!cardHolderRequestDto.isBankAccountValid()) {
             throw new IllegalArgumentException("Invalid bank account details. All fields are required or none.");
         }
 
         if (cardHolderRequestDto.bankAccount() != null) {
-            return CardHolderDomain.BankAccountDomain.builder()
+            return CardHolder.BankAccountDomain.builder()
                     .account(cardHolderRequestDto.bankAccount().account())
                     .agency(cardHolderRequestDto.bankAccount().agency())
                     .bankCode(cardHolderRequestDto.bankAccount().bankCode())

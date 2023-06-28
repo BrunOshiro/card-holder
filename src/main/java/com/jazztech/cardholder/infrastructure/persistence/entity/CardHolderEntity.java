@@ -47,6 +47,8 @@ public class CardHolderEntity {
     @Column(name = "credit_limit")
     BigDecimal creditLimit;
 
+    //TODO: create a new field called credit_limit_available
+
     @Nullable
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "bank_account_id", referencedColumnName = "id")
