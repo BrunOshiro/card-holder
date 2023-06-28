@@ -25,6 +25,7 @@ import com.jazztech.cardholder.infrastructure.persistence.mapper.CardMapper;
 import com.jazztech.cardholder.infrastructure.persistence.repository.CardHolderRepository;
 import com.jazztech.cardholder.infrastructure.persistence.repository.CardRepository;
 import com.jazztech.cardholder.presentation.dto.CardResponseDto;
+import com.jazztech.cardholder.presentation.dto.CardUpdateResponseDto;
 import com.jazztech.cardholder.service.constants.CardConstants;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
@@ -50,8 +51,7 @@ public class CardService {
     @Transactional
     public CardResponseDto createCard(UUID cardHolderId, BigDecimal limitRequested) {
         final CardHolderEntity cardHolder = getCardHolder(cardHolderId);
-        final BigDecimal limitAvailable = getCreditAvailableToTheCardHolder(cardHolder);
-        final Card createdCard = createCard(cardHolder, limitRequested, limitAvailable);
+        final Card createdCard = createCard(cardHolder, limitRequested, cardHolder.getCreditLimitAvailable());
         final CardEntity cardToSave = cardMapper.domainToEntity(createdCard);
         cardToSave.setCardHolder(cardHolder);
         final CardEntity savedCardEntity = cardRepository.save(cardToSave);
@@ -59,17 +59,38 @@ public class CardService {
         return cardMapper.entityToDto(savedCardEntity);
     }
 
-    private BigDecimal getCreditAvailableToTheCardHolder(CardHolderEntity cardHolder) {
-        final BigDecimal creditLimitAvailable = cardHolder.getCreditLimitAvailable();
+    @Transactional
+    public CardUpdateResponseDto updateCardLimit(UUID cardHolderId, UUID cardId, BigDecimal newLimit) {
+        final var card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new CardHolderNotFound("Card not found with id: " + cardId));
+        final var cardHolder = getCardHolder(cardHolderId);
 
-        LOGGER.info("Limit available to the Card Holder " + cardHolder.getId() + " is: " + creditLimitAvailable);
-        return creditLimitAvailable;
+        if (!card.getCardHolder().getId().equals(cardHolderId)) {
+            throw new CardHolderNotFound("Card not found with id: " + cardId + " for the Card Holder: " + cardHolderId);
+        }
+
+        final BigDecimal limitAvailable = cardHolder.getCreditLimitAvailable();
+        final BigDecimal addingOldLimitToLimitAvailable = limitAvailable.add(card.getCreditLimit());
+        isLimitAvailableEnough(newLimit, addingOldLimitToLimitAvailable);
+
+        card.setCreditLimit(newLimit);
+        final CardEntity savedCardEntity = cardRepository.save(card);
+        LOGGER.info("Card updated: {}", savedCardEntity);
+
+        cardHolder.setCreditLimitAvailable(limitAvailable.subtract(newLimit));
+        LOGGER.info("Credit limit available updated to the Card Holder " + cardHolder.getId() + " is: " + cardHolder.getCreditLimitAvailable());
+
+        return cardMapper.entityToCardUpdateResponseDto(savedCardEntity);
     }
 
-    private Card createCard(CardHolderEntity cardHolder, BigDecimal limitRequested, BigDecimal limitAvailable) {
+    private void isLimitAvailableEnough(BigDecimal limitRequested, BigDecimal limitAvailable) {
         if (!(limitAvailable.compareTo(limitRequested) >= 0)) {
             throw new CreditLimitNotAvailable("Credit limit requested is less than the limit available to the card holder.");
         }
+    }
+
+    private Card createCard(CardHolderEntity cardHolder, BigDecimal limitRequested, BigDecimal limitAvailable) {
+        isLimitAvailableEnough(limitRequested, limitAvailable);
 
         final BigDecimal newCreditLimitAvailable = limitAvailable.subtract(limitRequested);
         cardHolder.setCreditLimitAvailable(newCreditLimitAvailable);
