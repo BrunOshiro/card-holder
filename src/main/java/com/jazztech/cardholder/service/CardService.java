@@ -52,7 +52,9 @@ public class CardService {
         final CardHolderEntity cardHolder = getCardHolder(cardHolderId);
         final BigDecimal limitAvailable = getCreditAvailableToTheCardHolder(cardHolder);
         final Card createdCard = createCard(cardHolder, limitRequested, limitAvailable);
-        final CardEntity savedCardEntity = cardRepository.save(cardMapper.domainToEntity(createdCard));
+        final CardEntity cardToSave = cardMapper.domainToEntity(createdCard);
+        cardToSave.setCardHolder(cardHolder);
+        final CardEntity savedCardEntity = cardRepository.save(cardToSave);
         LOGGER.info("Card created: {}", savedCardEntity);
         return cardMapper.entityToDto(savedCardEntity);
     }
@@ -76,7 +78,6 @@ public class CardService {
 
         return Card.builder()
                 .creditLimit(limitRequested.setScale(ROUND, RoundingMode.HALF_UP))
-                .cardHolderId(cardHolder.getId())
                 .cardNumber(generateCreditCardNumber())
                 .cvv(generateCreditCardCvv())
                 .dueDate(generateCreditCardDueDate())

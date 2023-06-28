@@ -33,6 +33,7 @@ public class Factory {
 
     public static CardHolderEntity cardHolderEntityFactory() {
         return CardHolderEntity.builder()
+                .id(UUID.fromString("5619f798-d929-47ab-9b9d-4126905c2e11"))
                 .clientId(UUID.fromString("abf5d31a-ebb3-47e0-a441-f0487dd804e9"))
                 .creditAnalysisId(UUID.fromString("5619f798-d929-47ab-9b9d-4126905c2e11"))
                 .status(CardHolderStatusEnum.valueOf("ACTIVE"))
@@ -73,6 +74,13 @@ public class Factory {
                         .bankCode("242")
                         .build())
                 .build();
+    }
+
+    public static List<CardEntity> cardEntityListFactory(Integer listSize) {
+        List<CardEntity> cardEntityList = new ArrayList<>();
+        IntStream.range(0, listSize)
+                .forEach(i -> cardEntityList.add(cardEntityFactory()));
+        return cardEntityList;
     }
 
     public static List<CardHolderEntity> cardHolderEntityListFactory(Integer listSize) {

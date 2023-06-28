@@ -50,12 +50,14 @@ public class CardEntity {
 
     @Builder(toBuilder = true)
     public CardEntity(
+            UUID id,
             CardHolderEntity cardHolder,
             BigDecimal creditLimit,
             String cardNumber,
             String cvv,
             String dueDate
     ) {
+        this.id = id;
         this.cardHolder = cardHolder;
         this.creditLimit = creditLimit;
         this.cardNumber = cardNumber;

@@ -64,6 +64,7 @@ public class CardHolderEntity {
 
     @Builder(toBuilder = true)
     public CardHolderEntity(
+            @NotNull UUID id,
             @NotNull UUID clientId,
             @NotNull UUID creditAnalysisId,
             CardHolderStatusEnum status,
@@ -71,6 +72,7 @@ public class CardHolderEntity {
             BigDecimal creditLimitAvailable,
             @Nullable BankAccountEntity bankAccount
     ) {
+        this.id = id;
         this.clientId = clientId;
         this.creditAnalysisId = creditAnalysisId;
         this.status = status;
