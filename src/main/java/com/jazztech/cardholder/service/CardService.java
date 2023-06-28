@@ -46,7 +46,6 @@ public class CardService {
     private final CardRepository cardRepository;
     private final CardMapper cardMapper;
 
-
     @Transactional
     public CardResponseDto createCard(UUID cardHolderId, BigDecimal limitRequested) {
         final CardHolderEntity cardHolder = getCardHolder(cardHolderId);
@@ -65,7 +64,7 @@ public class CardService {
     }
 
     private Card createCard(CardHolderEntity cardHolder, BigDecimal limitRequested, BigDecimal limitAvailable) {
-        if (!isCreditLimitRequestedValid(limitAvailable, limitRequested)) {
+        if (!(limitAvailable.compareTo(limitRequested) >= 0)) {
             throw new CreditLimitNotAvailable("Credit limit requested is less than the limit available to the card holder.");
         }
 
@@ -90,10 +89,6 @@ public class CardService {
             throw new CardHolderNotFound("Card Holder Id " + cardHolderId + " is inactive.");
         }
         return cardHolder;
-    }
-
-    private Boolean isCreditLimitRequestedValid(BigDecimal creditLimitAvailable, BigDecimal creditLimitRequested) {
-        return creditLimitAvailable.compareTo(creditLimitRequested) >= 0;
     }
 
     private static String getIssuerDigits(String issuer) {
