@@ -19,6 +19,7 @@ import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderNotFou
 import com.jazztech.cardholder.infrastructure.handler.exception.CreditLimitNotAvailable;
 import com.jazztech.cardholder.infrastructure.persistence.entity.CardEntity;
 import com.jazztech.cardholder.infrastructure.persistence.entity.CardHolderEntity;
+import com.jazztech.cardholder.infrastructure.persistence.enums.CardHolderStatusEnum;
 import com.jazztech.cardholder.infrastructure.persistence.mapper.CardMapper;
 import com.jazztech.cardholder.infrastructure.persistence.repository.CardHolderRepository;
 import com.jazztech.cardholder.infrastructure.persistence.repository.CardRepository;
@@ -48,8 +49,7 @@ public class CardService {
 
     @Transactional
     public CardResponseDto createCard(UUID cardHolderId, BigDecimal limitRequested) {
-        final CardHolderEntity cardHolder = cardHolderRepository.findById(cardHolderId)
-                .orElseThrow(() -> new CardHolderNotFound("Card Holder not found with id: " + cardHolderId));
+        final CardHolderEntity cardHolder = getCardHolder(cardHolderId);
         final BigDecimal limitAvailable = getCreditAvailableToTheCardHolder(cardHolder);
         final Card createdCard = createCard(cardHolder, limitRequested, limitAvailable);
         final CardEntity savedCardEntity = cardRepository.save(cardMapper.domainToEntity(createdCard));
@@ -81,6 +81,15 @@ public class CardService {
                 .cvv(generateCreditCardCvv())
                 .dueDate(generateCreditCardDueDate())
                 .build();
+    }
+
+    private CardHolderEntity getCardHolder(UUID cardHolderId) {
+        final CardHolderEntity cardHolder = cardHolderRepository.findById(cardHolderId)
+                .orElseThrow(() -> new CardHolderNotFound("Card Holder not found with id: " + cardHolderId));
+        if (cardHolder.getStatus() == CardHolderStatusEnum.INACTIVE) {
+            throw new CardHolderNotFound("Card Holder Id " + cardHolderId + " is inactive.");
+        }
+        return cardHolder;
     }
 
     private Boolean isCreditLimitRequestedValid(BigDecimal creditLimitAvailable, BigDecimal creditLimitRequested) {
