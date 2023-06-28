@@ -15,6 +15,7 @@ import static com.jazztech.cardholder.service.constants.CardConstants.RANDOM_NUM
 import static com.jazztech.cardholder.service.constants.CardConstants.ROUND;
 
 import com.jazztech.cardholder.domain.entity.Card;
+import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderInactive;
 import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderNotFound;
 import com.jazztech.cardholder.infrastructure.handler.exception.CreditLimitNotAvailable;
 import com.jazztech.cardholder.infrastructure.persistence.entity.CardEntity;
@@ -86,7 +87,7 @@ public class CardService {
         final CardHolderEntity cardHolder = cardHolderRepository.findById(cardHolderId)
                 .orElseThrow(() -> new CardHolderNotFound("Card Holder not found with id: " + cardHolderId));
         if (cardHolder.getStatus() == CardHolderStatusEnum.INACTIVE) {
-            throw new CardHolderNotFound("Card Holder Id " + cardHolderId + " is inactive.");
+            throw new CardHolderInactive("Card Holder Id " + cardHolderId + " is inactive.");
         }
         return cardHolder;
     }

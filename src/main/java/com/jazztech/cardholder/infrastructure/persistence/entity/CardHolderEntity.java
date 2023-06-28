@@ -14,6 +14,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Builder;
@@ -73,8 +74,8 @@ public class CardHolderEntity {
         this.clientId = clientId;
         this.creditAnalysisId = creditAnalysisId;
         this.status = status;
-        this.creditLimit = creditLimit;
-        this.creditLimitAvailable = creditLimitAvailable;
+        this.creditLimit = creditLimit.setScale(ROUND, RoundingMode.HALF_UP);
+        this.creditLimitAvailable = creditLimitAvailable.setScale(ROUND, RoundingMode.HALF_UP);
         this.createdAt = LocalDateTime.now();
         this.bankAccount = bankAccount;
     }
