@@ -47,7 +47,8 @@ public class CardHolderEntity {
     @Column(name = "credit_limit")
     BigDecimal creditLimit;
 
-    //TODO: create a new field called credit_limit_available
+    @Column(name = "credit_limit_available")
+    BigDecimal creditLimitAvailable;
 
     @Nullable
     @OneToOne(cascade = CascadeType.ALL)

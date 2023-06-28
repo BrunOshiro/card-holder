@@ -14,6 +14,7 @@ public class CardConstants {
     public static final int LUHN_DOUBLE_FACTOR = 2;
     public static final int CARD_NUMBER_LENGTH = 15;
     public static final int CARD_NUMBER_GROUP_SIZE = 4;
+    public static final String ISSUER = "American Express";
 
     CardConstants() {
     }
