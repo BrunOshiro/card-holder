@@ -49,6 +49,7 @@ public class Factory {
 
     public static CardEntity cardEntityFactory() {
         return CardEntity.builder()
+                .id(UUID.fromString("c4d43683-26c6-4565-ad42-db0a3602f0c0"))
                 .cardHolder(cardHolderEntityFactory())
                 .cardNumber("1234-5678-9012-3456")
                 .dueDate("06/2028")
@@ -58,6 +59,7 @@ public class Factory {
 
     public static CardResponseDto cardResponseDtoFactory() {
         return CardResponseDto.builder()
+                .cardId(UUID.fromString("c4d43683-26c6-4565-ad42-db0a3602f0c0"))
                 .cardNumber("1234-5678-9012-3456")
                 .dueDate("06/2028")
                 .cvv("123")
