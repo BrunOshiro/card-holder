@@ -19,7 +19,7 @@ public class CardSearch {
     private final CardMapper cardMapper;
 
     public List<CardResponseDto> getAllByCardHolder(UUID cardHolderId) {
-        List<CardResponseDto> cardsListByCardHolder;
+        final List<CardResponseDto> cardsListByCardHolder;
 
         try {
             cardsListByCardHolder = cardMapper.entityListToDtoList(cardRepository.findByCardHolderId(cardHolderId));
