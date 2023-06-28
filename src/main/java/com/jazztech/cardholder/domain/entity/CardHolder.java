@@ -13,6 +13,7 @@ public record CardHolder(
         UUID creditAnalysisId,
         CardHolderStatusEnum status,
         BigDecimal creditLimit,
+        BigDecimal creditLimitAvailable,
         @Nullable
         BankAccountDomain bankAccount,
         LocalDateTime createdAt

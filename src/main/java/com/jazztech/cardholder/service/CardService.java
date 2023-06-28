@@ -18,6 +18,7 @@ import com.jazztech.cardholder.domain.entity.Card;
 import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderNotFound;
 import com.jazztech.cardholder.infrastructure.handler.exception.CreditLimitNotAvailable;
 import com.jazztech.cardholder.infrastructure.persistence.entity.CardEntity;
+import com.jazztech.cardholder.infrastructure.persistence.entity.CardHolderEntity;
 import com.jazztech.cardholder.infrastructure.persistence.mapper.CardMapper;
 import com.jazztech.cardholder.infrastructure.persistence.repository.CardHolderRepository;
 import com.jazztech.cardholder.infrastructure.persistence.repository.CardRepository;
@@ -43,6 +44,48 @@ public class CardService {
     private final CardHolderRepository cardHolderRepository;
     private final CardRepository cardRepository;
     private final CardMapper cardMapper;
+
+
+    @Transactional
+    public CardResponseDto createCard(UUID cardHolderId, BigDecimal limitRequested) {
+        final CardHolderEntity cardHolder = cardHolderRepository.findById(cardHolderId)
+                .orElseThrow(() -> new CardHolderNotFound("Card Holder not found with id: " + cardHolderId));
+        final BigDecimal limitAvailable = getCreditAvailableToTheCardHolder(cardHolder);
+        final Card createdCard = createCard(cardHolder, limitRequested, limitAvailable);
+        final CardEntity savedCardEntity = cardRepository.save(cardMapper.domainToEntity(createdCard));
+        LOGGER.info("Card created: {}", savedCardEntity);
+        return cardMapper.entityToDto(savedCardEntity);
+    }
+
+    private BigDecimal getCreditAvailableToTheCardHolder(CardHolderEntity cardHolder) {
+        final BigDecimal creditLimitAvailable = cardHolder.getCreditLimitAvailable();
+
+        LOGGER.info("Limit available to the Card Holder " + cardHolder.getId() + " is: " + creditLimitAvailable);
+        return creditLimitAvailable;
+    }
+
+    private Card createCard(CardHolderEntity cardHolder, BigDecimal limitRequested, BigDecimal limitAvailable) {
+        if (!isCreditLimitRequestedValid(limitAvailable, limitRequested)) {
+            throw new CreditLimitNotAvailable("Credit limit requested is less than the limit available to the card holder.");
+        }
+
+        final BigDecimal newCreditLimitAvailable = limitAvailable.subtract(limitRequested);
+        cardHolder.setCreditLimitAvailable(newCreditLimitAvailable);
+        cardHolderRepository.save(cardHolder);
+        LOGGER.info("Credit limit available updated to the Card Holder " + cardHolder.getId() + " is: " + newCreditLimitAvailable);
+
+        return Card.builder()
+                .creditLimit(limitRequested.setScale(ROUND, RoundingMode.HALF_UP))
+                .cardHolderId(cardHolder.getId())
+                .cardNumber(generateCreditCardNumber())
+                .cvv(generateCreditCardCvv())
+                .dueDate(generateCreditCardDueDate())
+                .build();
+    }
+
+    private Boolean isCreditLimitRequestedValid(BigDecimal creditLimitAvailable, BigDecimal creditLimitRequested) {
+        return creditLimitAvailable.compareTo(creditLimitRequested) >= 0;
+    }
 
     private static String getIssuerDigits(String issuer) {
         if ("Visa".equalsIgnoreCase(issuer)) {
@@ -85,57 +128,7 @@ public class CardService {
         return (checkDigit == CardConstants.DIGIT_TEN) ? 0 : checkDigit;
     }
 
-    @Transactional
-    public CardResponseDto createCard(UUID cardHolderId, BigDecimal limitRequested) {
-        final BigDecimal limitAvailable = getCreditAvailableToTheCardHolder(cardHolderId, limitRequested);
-        final Card createdCard = createCardDomain(cardHolderId, limitRequested, limitAvailable);
-        final CardEntity savedCardEntity = cardRepository.save(cardMapper.domainToEntity(createdCard));
-        LOGGER.info("Card created: {}", savedCardEntity);
-        return cardMapper.entityToDto(savedCardEntity);
-    }
-
-    //TODO: create/change the method to return the available limit to the card holder
     //TODO: subtract the used limit from the CardHolderEntity.availableLimit
-    private BigDecimal getCreditAvailableToTheCardHolder(UUID cardHolderId, BigDecimal limitRequested) {
-        final var cardHolderEntity = cardHolderRepository.findById(cardHolderId)
-                .orElseThrow(() -> new CardHolderNotFound("Card Holder not found with the provided Id: " + cardHolderId));
-
-        final BigDecimal creditLimitApproved = cardHolderEntity.getCreditLimit();
-        final BigDecimal creditLimitUsed;
-
-        final var cardEntity = cardRepository.findByCardHolderId(cardHolderId);
-
-        if (!cardEntity.isEmpty()) {
-            creditLimitUsed = cardEntity.stream().map(CardEntity::getCreditLimit).reduce(BigDecimal.ZERO, BigDecimal::add);
-        } else {
-            creditLimitUsed = BigDecimal.ZERO;
-        }
-
-        return limitAvailable(creditLimitApproved, limitRequested, creditLimitUsed);
-    }
-
-    public BigDecimal limitAvailable(BigDecimal creditLimitApproved, BigDecimal creditLimitRequested, BigDecimal creditLimitUsed) {
-        final BigDecimal creditLimitUsedWithRequest = creditLimitUsed.add(creditLimitRequested).setScale(ROUND, RoundingMode.HALF_UP);
-        return creditLimitApproved.subtract(creditLimitUsedWithRequest);
-    }
-
-    public Card createCardDomain(UUID cardHolderId, BigDecimal limitRequested, BigDecimal limitAvailable) {
-        if (!isCreditLimitRequestedValid(limitAvailable, limitRequested)) {
-            throw new CreditLimitNotAvailable("Credit limit requested is less than the limit available to the card holder.");
-        }
-
-        return Card.builder()
-                .creditLimit(limitRequested.setScale(ROUND, RoundingMode.HALF_UP))
-                .cardHolderId(cardHolderId)
-                .cardNumber(generateCreditCardNumber())
-                .cvv(generateCreditCardCvv())
-                .dueDate(generateCreditCardDueDate())
-                .build();
-    }
-
-    private Boolean isCreditLimitRequestedValid(BigDecimal creditLimitAvailable, BigDecimal creditLimitRequested) {
-        return creditLimitAvailable.compareTo(creditLimitRequested) >= 0;
-    }
 
     private String generateCreditCardDueDate() {
         final LocalDate currentDate = LocalDate.now();

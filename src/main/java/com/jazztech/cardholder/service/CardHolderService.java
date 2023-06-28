@@ -61,6 +61,7 @@ public class CardHolderService {
                 .creditAnalysisId(creditAnalysisDto.id())
                 .status(CardHolderStatusEnum.ACTIVE)
                 .creditLimit(creditAnalysisDto.approvedLimit().setScale(ROUND, RoundingMode.HALF_UP))
+                .creditLimitAvailable(creditAnalysisDto.approvedLimit().setScale(ROUND, RoundingMode.HALF_UP))
                 .bankAccount(createBankAccountDomain(cardHolderRequestDto))
                 .createdAt(LocalDateTime.now())
                 .build();
