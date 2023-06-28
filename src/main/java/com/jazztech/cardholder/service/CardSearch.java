@@ -19,15 +19,13 @@ public class CardSearch {
     private final CardMapper cardMapper;
 
     public List<CardResponseDto> getAllByCardHolder(UUID cardHolderId) {
-        final List<CardResponseDto> cardsListByCardHolder;
+        final List<CardResponseDto> cardsListByCardHolder = cardMapper.entityListToDtoList(cardRepository.findByCardHolderId(cardHolderId));
 
-        try {
-            cardsListByCardHolder = cardMapper.entityListToDtoList(cardRepository.findByCardHolderId(cardHolderId));
-        } catch (CardNotFound e) {
+        if (cardsListByCardHolder.isEmpty()) {
             throw new CardNotFound("Card not found to the Card Holder Id: " + cardHolderId);
         }
 
-        LOGGER.info("Card found to the Card Holder Id: " + cardHolderId);
+        LOGGER.info("Card(s) found to the Card Holder Id: " + cardHolderId + "\n" + cardsListByCardHolder);
         return cardsListByCardHolder;
     }
 }
