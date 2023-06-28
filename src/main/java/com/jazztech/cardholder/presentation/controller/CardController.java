@@ -1,6 +1,7 @@
 package com.jazztech.cardholder.presentation.controller;
 
 import com.jazztech.cardholder.presentation.dto.CardResponseDto;
+import com.jazztech.cardholder.presentation.dto.CardUpdateResponseDto;
 import com.jazztech.cardholder.service.CardSearch;
 import com.jazztech.cardholder.service.CardService;
 import java.math.BigDecimal;
@@ -13,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -59,5 +61,18 @@ public class CardController {
     ) {
         LOGGER.info("Card search by Card Holder Id " + cardHolderId + " and Card Id " + cardId + " requested");
         return cardSearch.getCardByIdAndHolderId(cardHolderId, cardId);
+    }
+
+    @PatchMapping("/{cardHolderId}/cards/{cardId}")
+    @ResponseStatus(value = HttpStatus.OK)
+    public CardUpdateResponseDto updateCardLimit(
+            @PathVariable(value = "cardHolderId") UUID cardHolderId,
+            @PathVariable(value = "cardId") UUID cardId,
+            @RequestBody Map<String, Object> limit
+    ) {
+        final BigDecimal newLimit = new BigDecimal(limit.get("limit").toString()).setScale(ROUND, RoundingMode.HALF_UP);
+
+        LOGGER.info("Card update requested");
+        return cardService.updateCardLimit(cardHolderId, cardId, newLimit);
     }
 }
