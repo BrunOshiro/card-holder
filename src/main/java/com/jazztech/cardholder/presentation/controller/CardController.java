@@ -1,15 +1,18 @@
 package com.jazztech.cardholder.presentation.controller;
 
 import com.jazztech.cardholder.presentation.dto.CardResponseDto;
+import com.jazztech.cardholder.service.CardSearch;
 import com.jazztech.cardholder.service.CardService;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,15 +28,26 @@ public class CardController {
     private static final Integer ROUND = 2;
 
     private final CardService cardService;
+    private final CardSearch cardSearch;
 
-    @PostMapping("/{cardHolder}/cards")
+    @PostMapping("/{cardHolderId}/cards")
     @ResponseStatus(value = HttpStatus.CREATED)
-    public CardResponseDto createCard(@PathVariable(value = "cardHolder") UUID cardHolderId,
-                                      @RequestBody Map<String, Object> requestPayload) {
-
+    public CardResponseDto createCard(
+            @PathVariable(value = "cardHolderId") UUID cardHolderId,
+            @RequestBody Map<String, Object> requestPayload
+    ) {
         final BigDecimal limit = new BigDecimal(requestPayload.get("limit").toString()).setScale(ROUND, RoundingMode.HALF_UP);
 
         LOGGER.info("Card creation requested");
         return cardService.createCard(cardHolderId, limit);
+    }
+
+    @GetMapping("/{cardHolderId}/cards")
+    @ResponseStatus(value = HttpStatus.OK)
+    public List<CardResponseDto> searchAllCardsByCardHolder(
+            @PathVariable(value = "cardHolderId") UUID cardHolderId
+    ) {
+        LOGGER.info("Card search by Card Holder Id " + cardHolderId + " requested");
+        return cardSearch.getAllByCardHolder(cardHolderId);
     }
 }
