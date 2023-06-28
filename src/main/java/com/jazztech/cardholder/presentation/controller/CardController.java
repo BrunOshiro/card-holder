@@ -50,4 +50,14 @@ public class CardController {
         LOGGER.info("Card search by Card Holder Id " + cardHolderId + " requested");
         return cardSearch.getAllByCardHolder(cardHolderId);
     }
+
+    @GetMapping("/{cardHolderId}/cards/{cardId}")
+    @ResponseStatus(value = HttpStatus.OK)
+    public CardResponseDto searchCardByIdAndHolderId(
+            @PathVariable(value = "cardHolderId") UUID cardHolderId,
+            @PathVariable(value = "cardId") UUID cardId
+    ) {
+        LOGGER.info("Card search by Card Holder Id " + cardHolderId + " and Card Id " + cardId + " requested");
+        return cardSearch.getCardByIdAndHolderId(cardHolderId, cardId);
+    }
 }

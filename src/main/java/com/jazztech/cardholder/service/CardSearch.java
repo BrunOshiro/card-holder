@@ -1,6 +1,7 @@
 package com.jazztech.cardholder.service;
 
 import com.jazztech.cardholder.infrastructure.handler.exception.CardNotFound;
+import com.jazztech.cardholder.infrastructure.persistence.entity.CardEntity;
 import com.jazztech.cardholder.infrastructure.persistence.mapper.CardMapper;
 import com.jazztech.cardholder.infrastructure.persistence.repository.CardRepository;
 import com.jazztech.cardholder.presentation.dto.CardResponseDto;
@@ -27,5 +28,16 @@ public class CardSearch {
 
         LOGGER.info("Card(s) found to the Card Holder Id: " + cardHolderId + "\n" + cardsListByCardHolder);
         return cardsListByCardHolder;
+    }
+
+    public CardResponseDto getCardByIdAndHolderId(UUID cardHolderId, UUID cardId) {
+        final var card = cardRepository.findById(cardId);
+        final var cardHolder = card.map(CardEntity::getCardHolder).orElse(null);
+
+        if (card.isPresent() && cardHolder.getId().equals(cardHolderId)) {
+            return cardMapper.entityToDto(card.get());
+        } else {
+            throw new CardNotFound("Card not found to the Card Holder Id: " + cardHolderId + " and Card Id: " + cardId);
+        }
     }
 }
