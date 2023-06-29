@@ -17,6 +17,7 @@ import static com.jazztech.cardholder.service.constants.CardConstants.ROUND;
 import com.jazztech.cardholder.domain.entity.Card;
 import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderInactive;
 import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderNotFound;
+import com.jazztech.cardholder.infrastructure.handler.exception.CardNotFound;
 import com.jazztech.cardholder.infrastructure.handler.exception.CreditLimitNotAvailable;
 import com.jazztech.cardholder.infrastructure.persistence.entity.CardEntity;
 import com.jazztech.cardholder.infrastructure.persistence.entity.CardHolderEntity;
@@ -47,7 +48,6 @@ public class CardService {
     private final CardHolderRepository cardHolderRepository;
     private final CardRepository cardRepository;
     private final CardMapper cardMapper;
-    private final CardSearch cardSearch;
 
     @Transactional
     public CardResponseDto createCard(UUID cardHolderId, BigDecimal limitRequested) {
@@ -62,8 +62,13 @@ public class CardService {
 
     @Transactional
     public CardUpdateResponseDto updateCardLimit(UUID cardHolderId, UUID cardId, BigDecimal newLimit) {
-        final var card = cardMapper.dtoToEntity(cardSearch.getCardByIdAndHolderId(cardId, cardHolderId));
-        final var cardHolder = card.getCardHolder();
+        final var card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new CardHolderNotFound("Card not found."));
+        final var cardHolder = getCardHolder(cardHolderId);
+
+        if (!cardHolder.getId().equals(card.getCardHolder().getId())) {
+            throw new CardNotFound("Card not found to the Card Holder Id: " + cardHolderId + " and Card Id: " + cardId);
+        }
 
         final BigDecimal limitAvailable = cardHolder.getCreditLimitAvailable();
         final BigDecimal addingOldLimitToLimitAvailable = limitAvailable.add(card.getCreditLimit());
@@ -76,9 +81,9 @@ public class CardService {
         final CardEntity savedCardEntity = cardRepository.save(card);
         LOGGER.info("Card updated: {}", savedCardEntity);
 
-        cardHolder.setCreditLimitAvailable(limitAvailable.subtract(newLimit));
+        cardHolder.setCreditLimitAvailable(addingOldLimitToLimitAvailable.subtract(newLimit));
         cardHolderRepository.save(cardHolder);
-        LOGGER.info("Credit limit available updated to the Card Holder " + cardHolder.getId() + " is: " + cardHolder.getCreditLimitAvailable());
+        LOGGER.info("Credit limit available updated to the Card Holder Id " + cardHolder.getId() + " is: " + cardHolder.getCreditLimitAvailable());
 
         return cardMapper.entityToCardUpdateResponseDto(savedCardEntity);
     }

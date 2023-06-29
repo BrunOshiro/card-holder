@@ -19,8 +19,5 @@ public interface CardMapper {
     @Mapping(source = "creditLimit", target = "updatedLimit")
     CardUpdateResponseDto entityToCardUpdateResponseDto(CardEntity cardEntity);
 
-    @Mapping(source = "cardId", target = "id")
-    CardEntity dtoToEntity(CardResponseDto cardResponseDto);
-
     List<CardResponseDto> entityListToDtoList(List<CardEntity> cardEntityList);
 }
