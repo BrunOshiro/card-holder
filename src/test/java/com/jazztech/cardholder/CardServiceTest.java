@@ -1,12 +1,14 @@
 package com.jazztech.cardholder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 import static org.wildfly.common.Assert.assertNotNull;
 
 import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderInactive;
 import com.jazztech.cardholder.infrastructure.handler.exception.CardHolderNotFound;
+import com.jazztech.cardholder.infrastructure.handler.exception.CardNotFound;
 import com.jazztech.cardholder.infrastructure.handler.exception.CreditLimitNotAvailable;
 import com.jazztech.cardholder.infrastructure.persistence.entity.CardEntity;
 import com.jazztech.cardholder.infrastructure.persistence.enums.CardHolderStatusEnum;
@@ -47,6 +49,8 @@ public class CardServiceTest {
 
     @Captor
     private ArgumentCaptor<UUID> cardHolderIdCaptor;
+    @Captor
+    private ArgumentCaptor<UUID> cardIdCaptor;
     @Captor
     private ArgumentCaptor<CardEntity> cardEntityCaptor;
 
@@ -95,5 +99,54 @@ public class CardServiceTest {
 
         assertThrows(CardHolderInactive.class,
                 () -> cardService.createCard(UUID.fromString("abf5d31a-ebb3-47e0-a441-f0487dd804e9"), BigDecimal.valueOf(3000.00)));
+    }
+
+    @Test
+    public void should_throw_exception_when_card_not_found() {
+        when(cardRepository.findById(UUID.fromString("c4d43683-26c6-4565-ad42-db0a3602f0c0")))
+                .thenReturn(Optional.empty());
+
+        assertThrows(CardNotFound.class, () -> cardService.updateCardLimit(
+                UUID.fromString("5619f798-d929-47ab-9b9d-4126905c2e11"),
+                UUID.fromString("c4d43683-26c6-4565-ad42-db0a3602f0c0"),
+                BigDecimal.valueOf(1000.00))
+        );
+    }
+
+    @Test
+    public void should_throw_exception_when_holder_and_card_are_not_related() {
+        CardEntity cardEntity = Factory.cardEntityFactory();
+        cardEntity.setCardHolder(Factory.cardHolderEntityFactory().toBuilder()
+                .id(UUID.fromString("6669f798-d929-47ab-9b9d-4126905c2e11"))
+                .build());
+        when(cardRepository.findById(UUID.fromString("c4d43683-26c6-4565-ad42-db0a3602f0c0")))
+                .thenReturn(Optional.of(cardEntity));
+        when(cardHolderRepository.findById(UUID.fromString("9999f798-d929-47ab-9b9d-4126905c2e11")))
+                .thenReturn(Optional.ofNullable(Factory.cardHolderEntityFactory()));
+
+        assertThrows(CardNotFound.class, () -> cardService.updateCardLimit(
+                UUID.fromString("9999f798-d929-47ab-9b9d-4126905c2e11"),
+                UUID.fromString("c4d43683-26c6-4565-ad42-db0a3602f0c0"),
+                BigDecimal.valueOf(1000.00))
+        );
+        assertNotEquals(cardEntity.getCardHolder().getId(), UUID.fromString("9999f798-d929-47ab-9b9d-4126905c2e11"));
+    }
+
+    @Test
+    public void should_throw_exception_when_credit_limit_available_is_less_than_requested_into_update() {
+        when(cardHolderRepository.findById(cardHolderIdCaptor.capture()))
+                .thenReturn(Optional.ofNullable(Factory.cardHolderEntityFactory()));
+        when(cardRepository.findById(cardIdCaptor.capture()))
+                .thenReturn(Optional.ofNullable(Factory.cardEntityFactory()));
+
+        Exception exception = assertThrows(
+                CreditLimitNotAvailable.class,
+                () -> cardService.updateCardLimit(
+                        UUID.fromString("5619f798-d929-47ab-9b9d-4126905c2e11"),
+                        UUID.fromString("c4d43683-26c6-4565-ad42-db0a3602f0c0"),
+                        BigDecimal.valueOf(5000.00))
+        );
+
+        assertEquals("Credit limit requested is less than the limit available to the card holder.", exception.getMessage());
     }
 }
