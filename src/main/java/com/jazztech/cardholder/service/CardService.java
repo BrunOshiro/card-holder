@@ -58,14 +58,14 @@ public class CardService {
         return cardMapper.entityToDto(savedCardEntity);
     }
 
-    private void isLimitAvailableEnough(BigDecimal limitRequested, BigDecimal limitAvailable) {
-        if (!(limitAvailable.compareTo(limitRequested) >= 0)) {
-            throw new CreditLimitNotAvailable("Credit limit requested is less than the limit available to the card holder.");
-        }
+    private Boolean isLimitAvailableEnough(BigDecimal limitRequested, BigDecimal limitAvailable) {
+        return limitAvailable.compareTo(limitRequested) >= 0;
     }
 
     private Card createCard(CardHolderEntity cardHolder, BigDecimal limitRequested, BigDecimal limitAvailable) {
-        isLimitAvailableEnough(limitRequested, limitAvailable);
+        if (!isLimitAvailableEnough(limitRequested, limitAvailable)) {
+            throw new CreditLimitNotAvailable("Credit limit requested is less than the limit available to the card holder.");
+        }
 
         final BigDecimal newCreditLimitAvailable = limitAvailable.subtract(limitRequested);
         cardHolder.setCreditLimitAvailable(newCreditLimitAvailable);
