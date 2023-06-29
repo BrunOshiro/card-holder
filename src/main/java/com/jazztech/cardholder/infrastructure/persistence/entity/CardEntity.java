@@ -63,5 +63,6 @@ public class CardEntity {
         this.cardNumber = cardNumber;
         this.cvv = cvv;
         this.dueDate = dueDate;
+        this.createdAt = LocalDateTime.now();
     }
 }

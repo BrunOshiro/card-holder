@@ -18,14 +18,15 @@ import java.util.stream.IntStream;
 
 public class Factory {
     private static final Random random = new Random();
+    private static final Integer ROUND = 2;
 
     public static CreditAnalysisDto creditAnalysisDtoFactory() {
         return CreditAnalysisDto.builder()
-                .id(UUID.fromString("5619f798-d929-47ab-9b9d-4126905c2e11"))
+                .id(UUID.fromString("6669f798-d929-47ab-9b9d-4126905c2e11"))
                 .approved(true)
-                .approvedLimit(BigDecimal.valueOf(3000.00))
-                .withdraw(BigDecimal.valueOf(300.00))
-                .annualInterest(BigDecimal.valueOf(0.15))
+                .approvedLimit(BigDecimal.valueOf(3000.00).setScale(ROUND, RoundingMode.HALF_UP))
+                .withdraw(BigDecimal.valueOf(300.00).setScale(ROUND, RoundingMode.HALF_UP))
+                .annualInterest(BigDecimal.valueOf(0.15).setScale(ROUND, RoundingMode.HALF_UP))
                 .clientId(UUID.fromString("abf5d31a-ebb3-47e0-a441-f0487dd804e9"))
                 .date(LocalDateTime.parse("2023-05-30T10:16:18.34429"))
                 .build();
@@ -35,10 +36,10 @@ public class Factory {
         return CardHolderEntity.builder()
                 .id(UUID.fromString("5619f798-d929-47ab-9b9d-4126905c2e11"))
                 .clientId(UUID.fromString("abf5d31a-ebb3-47e0-a441-f0487dd804e9"))
-                .creditAnalysisId(UUID.fromString("5619f798-d929-47ab-9b9d-4126905c2e11"))
+                .creditAnalysisId(UUID.fromString("6669f798-d929-47ab-9b9d-4126905c2e11"))
                 .status(CardHolderStatusEnum.valueOf("ACTIVE"))
-                .creditLimit(BigDecimal.valueOf(3000.00))
-                .creditLimitAvailable(BigDecimal.valueOf(3000.00))
+                .creditLimit(BigDecimal.valueOf(3000.00).setScale(ROUND, RoundingMode.HALF_UP))
+                .creditLimitAvailable(BigDecimal.valueOf(3000.00).setScale(ROUND, RoundingMode.HALF_UP))
                 .bankAccount(BankAccountEntity.builder()
                         .account("12345-6")
                         .agency("0001")
@@ -51,6 +52,7 @@ public class Factory {
         return CardEntity.builder()
                 .id(UUID.fromString("c4d43683-26c6-4565-ad42-db0a3602f0c0"))
                 .cardHolder(cardHolderEntityFactory())
+                .creditLimit(BigDecimal.valueOf(3000.00).setScale(ROUND, RoundingMode.HALF_UP))
                 .cardNumber("1234-5678-9012-3456")
                 .dueDate("06/2028")
                 .cvv("123")
