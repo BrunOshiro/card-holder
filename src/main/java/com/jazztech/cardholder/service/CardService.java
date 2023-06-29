@@ -63,7 +63,7 @@ public class CardService {
     @Transactional
     public CardUpdateResponseDto updateCardLimit(UUID cardHolderId, UUID cardId, BigDecimal newLimit) {
         final var card = cardRepository.findById(cardId)
-                .orElseThrow(() -> new CardHolderNotFound("Card not found."));
+                .orElseThrow(() -> new CardNotFound("Card not found with id: " + cardId));
         final var cardHolder = getCardHolder(cardHolderId);
 
         if (!cardHolder.getId().equals(card.getCardHolder().getId())) {
