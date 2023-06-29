@@ -20,6 +20,8 @@ import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -37,9 +39,14 @@ public class CardSearchTest {
     @Spy
     private CardMapperImpl mapperImpl;
 
+    @Captor
+    private ArgumentCaptor<UUID> cardIdCaptor;
+    @Captor
+    private ArgumentCaptor<UUID> cardHolderIdCaptor;
+
     @Test
     public void should_throw_exception_when_card_not_found_to_the_holder() {
-        when(cardRepository.findByCardHolderId(UUID.fromString("5619f798-d929-47ab-9b9d-4126905c2e11"))).thenReturn(List.of());
+        when(cardRepository.findByCardHolderId(cardHolderIdCaptor.capture())).thenReturn(List.of());
 
         assertThrows(CardNotFound.class, () -> cardSearch.getAllByCardHolder(UUID.fromString("5619f798-d929-47ab-9b9d-4126905c2e11")));    }
 
@@ -57,11 +64,12 @@ public class CardSearchTest {
     @Test
     public void should_get_card_by_id_and_holder_id() {
         CardEntity cardEntity = Factory.cardEntityFactory();
-        when(cardRepository.findById(UUID.fromString("c4d43683-26c6-4565-ad42-db0a3602f0c0")))
+        when(cardRepository.findById(cardIdCaptor.capture()))
                 .thenReturn(Optional.of(cardEntity));
 
         CardResponseDto cardResponseDto = cardSearch.getCardByIdAndHolderId(
-                UUID.fromString("5619f798-d929-47ab-9b9d-4126905c2e11"), UUID.fromString("c4d43683-26c6-4565-ad42-db0a3602f0c0"));
+                UUID.fromString("5619f798-d929-47ab-9b9d-4126905c2e11"),
+                UUID.fromString("c4d43683-26c6-4565-ad42-db0a3602f0c0"));
 
         assertNotNull(cardResponseDto);
         assertEquals(cardEntity.getId(), cardResponseDto.cardId());
@@ -69,7 +77,7 @@ public class CardSearchTest {
 
     @Test
     public void should_throw_exception_when_card_not_found() {
-        when(cardRepository.findById(UUID.fromString("c4d43683-26c6-4565-ad42-db0a3602f0c0")))
+        when(cardRepository.findById(cardIdCaptor.capture()))
                 .thenReturn(Optional.empty());
 
         assertThrows(CardNotFound.class, () -> cardSearch.getCardByIdAndHolderId(
@@ -79,7 +87,7 @@ public class CardSearchTest {
     @Test
     public void should_throw_exception_when_holder_and_card_are_not_related() {
         CardEntity cardEntity = Factory.cardEntityFactory();
-        when(cardRepository.findById(UUID.fromString("c4d43683-26c6-4565-ad42-db0a3602f0c0")))
+        when(cardRepository.findById(cardIdCaptor.capture()))
                 .thenReturn(Optional.of(cardEntity));
 
         assertThrows(CardNotFound.class, () -> cardSearch.getCardByIdAndHolderId(

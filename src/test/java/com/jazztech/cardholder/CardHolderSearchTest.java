@@ -21,6 +21,8 @@ import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -37,6 +39,9 @@ public class CardHolderSearchTest {
 
     @Spy
     private CardHolderMapperImpl mapperImpl;
+
+    @Captor
+    private ArgumentCaptor<UUID> cardHolderIdCaptor;
 
     @Test
     public void should_throw_exception_when_not_find_card_holders() {
@@ -120,7 +125,7 @@ public class CardHolderSearchTest {
     public void should_get_card_holder_by_id() {
         CardHolderEntity cardHolderEntity = Factory.cardHolderEntityFactory();
 
-        when(cardHolderRepository.findById(UUID.fromString("abf5d31a-ebb3-47e0-a441-f0487dd804e9")))
+        when(cardHolderRepository.findById(cardHolderIdCaptor.capture()))
                 .thenReturn(Optional.ofNullable(cardHolderEntity));
 
         CardHolderResponseDto cardHolderResponseDto = cardHolderSearch.getById(UUID.fromString("abf5d31a-ebb3-47e0-a441-f0487dd804e9"));
@@ -130,7 +135,7 @@ public class CardHolderSearchTest {
 
     @Test
     public void should_throw_exception_when_card_holder_not_found_by_id() {
-        when(cardHolderRepository.findById(UUID.fromString("abf5d31a-ebb3-47e0-a441-f0487dd804e9")))
+        when(cardHolderRepository.findById(cardHolderIdCaptor.capture()))
                 .thenReturn(Optional.empty());
 
         assertThrows(CardHolderNotFound.class, () -> cardHolderSearch.getById(UUID.fromString("abf5d31a-ebb3-47e0-a441-f0487dd804e9")));
