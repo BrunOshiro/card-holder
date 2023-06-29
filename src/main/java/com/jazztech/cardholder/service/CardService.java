@@ -47,6 +47,7 @@ public class CardService {
     private final CardHolderRepository cardHolderRepository;
     private final CardRepository cardRepository;
     private final CardMapper cardMapper;
+    private final CardSearch cardSearch;
 
     @Transactional
     public CardResponseDto createCard(UUID cardHolderId, BigDecimal limitRequested) {
@@ -61,36 +62,35 @@ public class CardService {
 
     @Transactional
     public CardUpdateResponseDto updateCardLimit(UUID cardHolderId, UUID cardId, BigDecimal newLimit) {
-        final var card = cardRepository.findById(cardId)
-                .orElseThrow(() -> new CardHolderNotFound("Card not found with id: " + cardId));
-        final var cardHolder = getCardHolder(cardHolderId);
-
-        if (!card.getCardHolder().getId().equals(cardHolderId)) {
-            throw new CardHolderNotFound("Card not found with id: " + cardId + " for the Card Holder: " + cardHolderId);
-        }
+        final var card = cardMapper.dtoToEntity(cardSearch.getCardByIdAndHolderId(cardId, cardHolderId));
+        final var cardHolder = card.getCardHolder();
 
         final BigDecimal limitAvailable = cardHolder.getCreditLimitAvailable();
         final BigDecimal addingOldLimitToLimitAvailable = limitAvailable.add(card.getCreditLimit());
-        isLimitAvailableEnough(newLimit, addingOldLimitToLimitAvailable);
+
+        if (!isLimitAvailableEnough(newLimit, addingOldLimitToLimitAvailable)) {
+            throw new CreditLimitNotAvailable("Credit limit requested is less than the limit available to the card holder.");
+        }
 
         card.setCreditLimit(newLimit);
         final CardEntity savedCardEntity = cardRepository.save(card);
         LOGGER.info("Card updated: {}", savedCardEntity);
 
         cardHolder.setCreditLimitAvailable(limitAvailable.subtract(newLimit));
+        cardHolderRepository.save(cardHolder);
         LOGGER.info("Credit limit available updated to the Card Holder " + cardHolder.getId() + " is: " + cardHolder.getCreditLimitAvailable());
 
         return cardMapper.entityToCardUpdateResponseDto(savedCardEntity);
     }
 
-    private void isLimitAvailableEnough(BigDecimal limitRequested, BigDecimal limitAvailable) {
-        if (!(limitAvailable.compareTo(limitRequested) >= 0)) {
-            throw new CreditLimitNotAvailable("Credit limit requested is less than the limit available to the card holder.");
-        }
+    private Boolean isLimitAvailableEnough(BigDecimal limitRequested, BigDecimal limitAvailable) {
+        return limitAvailable.compareTo(limitRequested) >= 0;
     }
 
     private Card createCard(CardHolderEntity cardHolder, BigDecimal limitRequested, BigDecimal limitAvailable) {
-        isLimitAvailableEnough(limitRequested, limitAvailable);
+        if (!isLimitAvailableEnough(limitRequested, limitAvailable)) {
+            throw new CreditLimitNotAvailable("Credit limit requested is less than the limit available to the card holder.");
+        }
 
         final BigDecimal newCreditLimitAvailable = limitAvailable.subtract(limitRequested);
         cardHolder.setCreditLimitAvailable(newCreditLimitAvailable);
