@@ -50,8 +50,7 @@ public class CardService {
     @Transactional
     public CardResponseDto createCard(UUID cardHolderId, BigDecimal limitRequested) {
         final CardHolderEntity cardHolder = getCardHolder(cardHolderId);
-        final BigDecimal limitAvailable = getCreditAvailableToTheCardHolder(cardHolder);
-        final Card createdCard = createCard(cardHolder, limitRequested, limitAvailable);
+        final Card createdCard = createCard(cardHolder, limitRequested, cardHolder.getCreditLimitAvailable());
         final CardEntity cardToSave = cardMapper.domainToEntity(createdCard);
         cardToSave.setCardHolder(cardHolder);
         final CardEntity savedCardEntity = cardRepository.save(cardToSave);
@@ -59,15 +58,12 @@ public class CardService {
         return cardMapper.entityToDto(savedCardEntity);
     }
 
-    private BigDecimal getCreditAvailableToTheCardHolder(CardHolderEntity cardHolder) {
-        final BigDecimal creditLimitAvailable = cardHolder.getCreditLimitAvailable();
-
-        LOGGER.info("Limit available to the Card Holder " + cardHolder.getId() + " is: " + creditLimitAvailable);
-        return creditLimitAvailable;
+    private Boolean isLimitAvailableEnough(BigDecimal limitRequested, BigDecimal limitAvailable) {
+        return limitAvailable.compareTo(limitRequested) >= 0;
     }
 
     private Card createCard(CardHolderEntity cardHolder, BigDecimal limitRequested, BigDecimal limitAvailable) {
-        if (!(limitAvailable.compareTo(limitRequested) >= 0)) {
+        if (!isLimitAvailableEnough(limitRequested, limitAvailable)) {
             throw new CreditLimitNotAvailable("Credit limit requested is less than the limit available to the card holder.");
         }
 
