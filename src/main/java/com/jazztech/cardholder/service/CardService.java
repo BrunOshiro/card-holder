@@ -71,9 +71,9 @@ public class CardService {
         }
 
         final BigDecimal limitAvailable = cardHolder.getCreditLimitAvailable();
-        final BigDecimal addingOldLimitToLimitAvailable = limitAvailable.add(card.getCreditLimit());
+        final BigDecimal oldLimitAddedToLimitAvailable = limitAvailable.add(card.getCreditLimit());
 
-        if (!isLimitAvailableEnough(newLimit, addingOldLimitToLimitAvailable)) {
+        if (!isLimitAvailableEnough(newLimit, oldLimitAddedToLimitAvailable)) {
             throw new CreditLimitNotAvailable("Credit limit requested is less than the limit available to the card holder.");
         }
 
@@ -81,7 +81,7 @@ public class CardService {
         final CardEntity savedCardEntity = cardRepository.save(card);
         LOGGER.info("Card updated: {}", savedCardEntity);
 
-        cardHolder.setCreditLimitAvailable(addingOldLimitToLimitAvailable.subtract(newLimit));
+        cardHolder.setCreditLimitAvailable(oldLimitAddedToLimitAvailable.subtract(newLimit));
         cardHolderRepository.save(cardHolder);
         LOGGER.info("Credit limit available updated to the Card Holder Id " + cardHolder.getId() + " is: " + cardHolder.getCreditLimitAvailable());
 
