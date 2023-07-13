@@ -38,4 +38,4 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
 url:
-  clientApi.host: http://172.21.0.1:8081/api/v1/credits/analysis
+  clientApi.host: http://172.21.0.6:8081/api/v1/credits/analysis
