@@ -1,5 +1,5 @@
 services:
-  postgres:
+  postgres-cardholder:
     image: postgres
     container_name: card-holder
     environment:
@@ -7,3 +7,25 @@ services:
       POSTGRES_PASSWORD: senha123
     ports:
       - "5434:5432"
+    networks:
+      - jazz-study-apis-network
+  cardholderapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    networks:
+      - jazz-study-apis-network
+    depends_on:
+      - postgres-cardholder
+    environment:
+      - POSTGRES_URL=jdbc:postgresql://postgres:5432/postgres
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=senha123
+
+networks:
+  jazz-study-apis-network:
+    external: true
+volumes:
+  postgres-data:
